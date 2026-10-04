@@ -24,8 +24,28 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
             .replace('flightblock$assemble(CraftingInput input, CallbackInfoReturnable', 'flightblock$assemble(CraftingInput input, net.minecraft.core.HolderLookup.Provider registries, CallbackInfoReturnable')
             .replace('recipe.assemble(input)', 'recipe.assemble(input, FlightBlock.INSTANCE.server.registryAccess())')
             .replace('recipe.assemble(CraftingInput.of(3, 3, invalid))', 'recipe.assemble(CraftingInput.of(3, 3, invalid), FlightBlock.INSTANCE.server.registryAccess())')
-        if (flightblockMinecraftVersion == '1.21.8') {
+        if (flightblockMinecraftVersion in ['1.21.8', '1.21.4']) {
             adapted = adapted.replace('Identifier', 'ResourceLocation').replace('.identifier()', '.location()')
+        }
+        if (flightblockMinecraftVersion == '1.21.4') {
+            adapted = adapted.replace('import net.minecraft.world.level.storage.TagValueInput;', '')
+                .replace('readAdditionalSaveData(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), data))', 'readAdditionalSaveData(data)')
+                .replace('copyTag().getCompound("flightblock").orElseThrow()', 'copyTag().getCompound("flightblock")')
+                .replace('getIntOr("schemaVersion", -1)', 'getInt("schemaVersion")')
+                .replace('getIntOr("level", -1)', 'getInt("level")')
+                .replace('getIntOr("flightblock_recipe", 0)', 'getInt("flightblock_recipe")')
+                .replace('getString("instanceId").orElseThrow()', 'getString("instanceId")')
+                .replace('getLong("activatedAt").orElseThrow()', 'getLong("activatedAt")')
+                .replace('getLong("expiresAt").orElseThrow()', 'getLong("expiresAt")')
+                .replace('p.level()', 'p.serverLevel()')
+                .replace('BlockPos pos, BlockState next, int flags', 'BlockPos pos, BlockState next, boolean flags')
+                .replace('computeIfAbsent(WorldState.TYPE)', 'computeIfAbsent(WorldState.TYPE, "flightblock_anchors")')
+            if (adapted.contains('public static final SavedDataType<WorldState> TYPE')) {
+                adapted = '    public static final SavedData.Factory<WorldState> TYPE = new SavedData.Factory<>(WorldState::new, (tag, registries) -> CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE, tag).getOrThrow(), null);'
+            }
+            if (adapted.contains('public final Map<String, Anchor> byId')) {
+                adapted = '    @Override public net.minecraft.nbt.CompoundTag save(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) { return (net.minecraft.nbt.CompoundTag)CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, this).getOrThrow(); }\n' + adapted
+            }
         }
         // These Forge/NeoForge distributions install Minecraft in official names.
         // Fabric/Quilt still require named -> intermediary remapping.
