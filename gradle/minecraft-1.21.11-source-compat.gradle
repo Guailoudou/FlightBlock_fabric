@@ -29,6 +29,7 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
         }
         if (flightblockMinecraftVersion == '1.21.4') {
             adapted = adapted.replace('import net.minecraft.world.level.storage.TagValueInput;', '')
+                .replace('Commands.hasPermission(Commands.LEVEL_GAMEMASTERS)', 'source -> source.hasPermission(2)')
                 .replace('readAdditionalSaveData(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), data))', 'readAdditionalSaveData(data)')
                 .replace('copyTag().getCompound("flightblock").orElseThrow()', 'copyTag().getCompound("flightblock")')
                 .replace('getIntOr("schemaVersion", -1)', 'getInt("schemaVersion")')
