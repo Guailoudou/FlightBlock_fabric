@@ -1,0 +1,5 @@
+[
+  {"minecraft": "26.3", "loader": "fabric", "project": ".", "java": "25"},
+  {"minecraft": "26.3", "loader": "forge", "project": "ports/26.3/forge", "java": "25"},
+  {"minecraft": "26.3", "loader": "neoforge", "project": "ports/26.3/neoforge", "java": "25"}
+]

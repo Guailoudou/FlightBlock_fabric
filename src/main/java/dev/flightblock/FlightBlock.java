@@ -1,13 +1,6 @@
 package dev.flightblock;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.*;
-import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.fabricmc.fabric.api.entity.event.v1.*;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.commands.*;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
@@ -31,22 +24,24 @@ import java.time.Clock;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public final class FlightBlock implements ModInitializer {
+public final class FlightBlock {
     public static FlightBlock INSTANCE;
     public static final Logger LOG = LoggerFactory.getLogger("flightblock");
     public Config config = Config.defaults();
     public Clock clock = Clock.systemUTC();
     public WorldState state;
     public MinecraftServer server;
+    public FlightAccess abilities;
     public final FlightManager flight = new FlightManager(this);
     public final BlockGlow glow = new BlockGlow();
     public static final ThreadLocal<WorldState.Anchor> MINING = new ThreadLocal<>();
     private Path configPath;
     private int ticks;
     private final Queue<Runnable> pendingChunks = new ConcurrentLinkedQueue<>();
-    @Override public void onInitialize() {
+    public void initialize(Path configDirectory, FlightAccess abilities) {
         INSTANCE = this;
-        configPath = FabricLoader.getInstance().getConfigDir().resolve("flightblock.json");
+        this.abilities = abilities;
+        configPath = configDirectory.resolve("flightblock.json");
         try {
             if (!Files.exists(configPath)) {
                 Files.createDirectories(configPath.getParent());
@@ -54,7 +49,9 @@ public final class FlightBlock implements ModInitializer {
             }
             config = Config.read(configPath);
         } catch (Exception e) { LOG.error("FLIGHTBLOCK 配置错误，使用内置默认值并保留原文件", e); }
-        ServerLifecycleEvents.SERVER_STARTED.register(s -> {
+        if (Boolean.getBoolean("flightblock.verify")) RuntimeChecks.checkMixinTargets();
+    }
+    public void started(MinecraftServer s) {
             server = s;
             state = s.overworld().getDataStorage().computeIfAbsent(WorldState.TYPE);
             expire();
@@ -63,16 +60,19 @@ public final class FlightBlock implements ModInitializer {
                     if (a.dimension().equals(dimension(level)) && level.hasChunkAt(a.pos())) reconcile(level, a);
                 }
             }
-            LOG.info("FlightBlock {} 已启动：{} 个登记实例", FabricLoader.getInstance().getModContainer("flightblock").orElseThrow().getMetadata().getVersion().getFriendlyString(), state.byId.size());
+            LOG.info("FlightBlock 已启动：{} 个登记实例", state.byId.size());
             if (Boolean.getBoolean("flightblock.verify")) RuntimeChecks.run();
-        });
-        ServerLifecycleEvents.SERVER_STOPPING.register(s -> {
+
+    }
+    public void stopping(MinecraftServer s) {
             pendingChunks.clear();
             for (ServerPlayer p : s.getPlayerList().getPlayers()) flight.clear(p, false);
             glow.clear();
-        });
-        ServerLifecycleEvents.SERVER_STOPPED.register(s -> { pendingChunks.clear(); state = null; server = null; });
-        ServerTickEvents.END_SERVER_TICK.register(s -> {
+
+    }
+    public void stopped(MinecraftServer s) { pendingChunks.clear(); state = null; server = null;
+    }
+    public void tick(MinecraftServer s) {
             if (state == null) return;
             drainPending(pendingChunks);
             expire();
@@ -80,21 +80,24 @@ public final class FlightBlock implements ModInitializer {
                 for (ServerPlayer p : s.getPlayerList().getPlayers()) flight.check(p);
             }
             if (ticks % 20 == 0) previewParticles();
-        });
-        ServerChunkEvents.CHUNK_LOAD.register((level, chunk, generated) -> {
+
+    }
+    public void chunkLoaded(ServerLevel level, net.minecraft.world.level.chunk.ChunkAccess chunk) {
             // The FULL chunk future is not completed inside this callback.
             // Queue work instead of reading blocks or creating entities here.
             pendingChunks.add(() -> {
                 if (state != null && server == level.getServer())
                     for (WorldState.Anchor a : state.chunk(dimension(level), chunk.getPos().x(), chunk.getPos().z())) reconcile(level, a);
             });
-        });
-        ServerChunkEvents.CHUNK_UNLOAD.register((level, chunk) -> {
+
+    }
+    public void chunkUnloaded(ServerLevel level, net.minecraft.world.level.chunk.ChunkAccess chunk) {
             if (state != null) for (WorldState.Anchor a : state.chunk(dimension(level), chunk.getPos().x(), chunk.getPos().z())) glow.remove(a.id());
-        });
-        UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
+
+    }
+    public InteractionResult useBlock(net.minecraft.world.entity.player.Player player, Level level, InteractionHand hand, BlockPos pos) {
             if (!(player instanceof ServerPlayer p) || state == null || p.isSpectator()) return InteractionResult.PASS;
-            WorldState.Anchor a = at(level, hit.getBlockPos());
+            WorldState.Anchor a = at(level, pos);
             if (a == null) return InteractionResult.PASS;
             if (hand != InteractionHand.MAIN_HAND) return InteractionResult.SUCCESS;
             if (p.isShiftKeyDown()) {
@@ -104,7 +107,7 @@ public final class FlightBlock implements ModInitializer {
                 return InteractionResult.SUCCESS;
             }
             reconcile(p.level(), a);
-            a = at(level, hit.getBlockPos());
+            a = at(level, pos);
             if (a == null) return InteractionResult.SUCCESS;
             if (!a.valid(clock.millis())) {
                 if (a.activatedAt() > 0) return InteractionResult.SUCCESS;
@@ -126,15 +129,10 @@ public final class FlightBlock implements ModInitializer {
                 .append(Component.literal("半径 " + config.radius(a.level()) + " 格，剩余 " + remaining(a) + " 秒").withStyle(ChatFormatting.GOLD))
                 .append(Component.literal("；双击跳跃起飞。").withStyle(ChatFormatting.GREEN)));
             return InteractionResult.SUCCESS;
-        });
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, s) -> refresh(handler.player));
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, s) -> flight.clear(handler.player, false));
-        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damage) -> {
-            if (entity instanceof ServerPlayer p) flight.clear(p, false);
-        });
-        ServerPlayerEvents.AFTER_RESPAWN.register((old, p, alive) -> { flight.clear(old, false); refresh(p); });
-        ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((p, from, to) -> flight.clear(p, true));
-        CommandRegistrationCallback.EVENT.register((dispatcher, access, environment) -> dispatcher.register(
+
+    }
+    public void registerCommands(com.mojang.brigadier.CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
             Commands.literal("flightblock")
                 .then(Commands.literal("reload").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS)).executes(c -> reload(c.getSource())))
                 .then(Commands.literal("give").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
@@ -149,8 +147,7 @@ public final class FlightBlock implements ModInitializer {
                     if (p == null) { c.getSource().sendFailure(notice("请由玩家执行 /flightblock off", ChatFormatting.RED)); return 0; }
                     flight.clear(p, true);
                     p.sendSystemMessage(notice("已清空你的飞行方块绑定。", ChatFormatting.GREEN)); return 1;
-                }))));
-        if (Boolean.getBoolean("flightblock.verify")) RuntimeChecks.checkMixinTargets();
+                })));
     }
     private static MutableComponent notice(String text, ChatFormatting color) {
         return Component.literal("[FlightBlock] ").withStyle(ChatFormatting.DARK_AQUA)

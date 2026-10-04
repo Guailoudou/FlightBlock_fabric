@@ -1,0 +1,29 @@
+plugins { id 'java'; id 'net.minecraftforge.gradle' version '7.0.17' }
+repositories { minecraft.mavenizer(it); maven fg.forgeMaven; maven fg.minecraftLibsMaven; mavenCentral() }
+dependencies {
+    implementation minecraft.dependency('net.minecraftforge:forge:26.3-66.0.9')
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
+}
+jar { manifest { attributes 'MixinConfigs': 'flightblock.mixins.json' } }
+
+def sharedRoot = file('../../..')
+def sharedProperties = new Properties()
+file("${sharedRoot}/gradle.properties").withInputStream { sharedProperties.load(it) }
+version = sharedProperties.getProperty('version')
+group = 'dev.flightblock'
+base { archivesName = 'flightblock-26.3-forge' }
+java { toolchain.languageVersion = JavaLanguageVersion.of(25); withSourcesJar() }
+sourceSets.main.java {
+    srcDir "${sharedRoot}/src/main/java"
+    exclude 'dev/flightblock/platform/FabricEntrypoint.java'
+    exclude 'dev/flightblock/PalFlightAccess.java'
+}
+sourceSets.main.resources {
+    srcDir "${sharedRoot}/src/main/resources"
+    exclude 'fabric.mod.json'
+}
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/*.toml') { expand version: project.version }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = 25 }

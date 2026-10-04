@@ -9,44 +9,74 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    outputs:
+      targets: ${{ steps.targets.outputs.targets }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+      - id: targets
+        run: echo "targets=$(jq -c . ci/targets.json)" >> "$GITHUB_OUTPUT"
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@v5
+  build:
+    needs: matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJson(needs.matrix.outputs.targets) }}
+    name: ${{ matrix.target.minecraft }} / ${{ matrix.target.loader }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '25'
+          java-version: ${{ matrix.target.java }}
           cache: gradle
           cache-dependency-path: |
-            build.gradle
-            settings.gradle
-            gradle.properties
+            **/*.gradle
+            **/gradle.properties
             gradle/wrapper/gradle-wrapper.properties
-
-      - name: Build and verify rules
+      - name: Build selected version and loader
+        env:
+          PROJECT: ${{ matrix.target.project }}
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon clean build
-
-      - name: Generate JAR checksums
-        working-directory: build/libs
+          ./gradlew --no-daemon --project-dir "$PROJECT" clean build
+      - name: Stage installable JARs
+        env:
+          PROJECT: ${{ matrix.target.project }}
+          MC: ${{ matrix.target.minecraft }}
+          LOADER: ${{ matrix.target.loader }}
         run: |
-          for jar in *.jar; do
-            [[ "$jar" == *-sources.jar ]] || sha256sum "$jar"
-          done > SHA256SUMS
-
-      - name: Upload installable JAR
-        uses: actions/upload-artifact@v4
+          mkdir -p "dist/$MC"
+          find "$PROJECT/build/libs" -maxdepth 1 -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' -exec cp {} "dist/$MC/" \;
+          test -n "$(find "dist/$MC" -name "*-$LOADER-*.jar" -print -quit)"
+      - uses: actions/upload-artifact@v4
         with:
-          name: flightblock-${{ github.run_number }}
-          path: |
-            build/libs/*.jar
-            !build/libs/*-sources.jar
-            build/libs/SHA256SUMS
+          name: part-${{ matrix.target.minecraft }}-${{ matrix.target.loader }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 3
+
+  package:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: part-*
+          path: release/
+          merge-multiple: true
+      - name: Package all versions together
+        working-directory: release
+        run: |
+          find . -type f -name '*.jar' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+          zip -r "../FlightBlock-all-versions-${{ github.run_number }}.zip" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FlightBlock-all-versions-${{ github.run_number }}
+          path: FlightBlock-all-versions-*.zip
           if-no-files-found: error
           retention-days: 30

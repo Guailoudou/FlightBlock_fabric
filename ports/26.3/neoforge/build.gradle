@@ -1,0 +1,26 @@
+plugins { id 'java'; id 'net.neoforged.moddev' version '2.0.148' }
+neoForge { version = '26.3.0.48-beta' }
+repositories { mavenCentral() }
+dependencies { compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5' }
+
+def sharedRoot = file('../../..')
+def sharedProperties = new Properties()
+file("${sharedRoot}/gradle.properties").withInputStream { sharedProperties.load(it) }
+version = sharedProperties.getProperty('version')
+group = 'dev.flightblock'
+base { archivesName = 'flightblock-26.3-neoforge' }
+java { toolchain.languageVersion = JavaLanguageVersion.of(25); withSourcesJar() }
+sourceSets.main.java {
+    srcDir "${sharedRoot}/src/main/java"
+    exclude 'dev/flightblock/platform/FabricEntrypoint.java'
+    exclude 'dev/flightblock/PalFlightAccess.java'
+}
+sourceSets.main.resources {
+    srcDir "${sharedRoot}/src/main/resources"
+    exclude 'fabric.mod.json'
+}
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/*.toml') { expand version: project.version }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = 25 }

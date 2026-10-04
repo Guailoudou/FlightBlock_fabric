@@ -2,6 +2,8 @@ plugins {
     id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
 
+base { archivesName = "flightblock-${minecraft_version}-fabric" }
+
 repositories {
     maven { url = 'https://maven.ladysnake.org/releases' }
 }

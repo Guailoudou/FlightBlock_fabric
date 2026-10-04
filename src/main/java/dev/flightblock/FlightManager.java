@@ -4,16 +4,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import io.github.ladysnake.pal.AbilitySource;
-import io.github.ladysnake.pal.AbilityTracker;
-import io.github.ladysnake.pal.Pal;
-import io.github.ladysnake.pal.VanillaAbilities;
 import java.util.*;
 
 public final class FlightManager {
     private final FlightBlock mod;
     private final FlightBindings bindings = new FlightBindings();
-    static final AbilitySource FLIGHT = Pal.getAbilitySource("flightblock", "flight");
     private final Set<UUID> hudPlayers = new HashSet<>();
     public FlightManager(FlightBlock mod) { this.mod = mod; }
     public Set<String> bindings(ServerPlayer player) {
@@ -70,7 +65,7 @@ public final class FlightManager {
         boolean allowed = bindings(player).stream().map(mod.state.byId::get).filter(Objects::nonNull)
             .anyMatch(a -> a.valid(mod.clock.millis()) && a.contains(FlightBlock.dimension(player.level()), player.getX(), player.getY(), player.getZ(), mod.config.radius(a.level())));
         if (allowed) {
-            FLIGHT.grantTo(player, VanillaAbilities.ALLOW_FLYING);
+            mod.abilities.grant(player);
         } else revoke(player, true);
     }
     public static WorldState.Anchor selectAnchor(Collection<WorldState.Anchor> anchors, Config config,
@@ -83,9 +78,8 @@ public final class FlightManager {
         if (hudPlayers.remove(player.getUUID())) player.sendSystemMessage(Component.empty(), true);
     }
     private void revoke(ServerPlayer player, boolean cushion) {
-        if (!FLIGHT.grants(player, VanillaAbilities.ALLOW_FLYING)) return;
         boolean airborne = !player.onGround();
-        FLIGHT.revokeFrom(player, VanillaAbilities.ALLOW_FLYING);
+        if (!mod.abilities.revoke(player)) return;
         if (player.getAbilities().mayfly) return;
         int ticks = mod.config.slowSeconds() * 20;
         if (cushion && airborne && player.isAlive() && ticks > 0) {
@@ -94,22 +88,5 @@ public final class FlightManager {
                 player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, ticks, 0));
         }
     }
-    // Bindings are session-only: exclude our source from PAL's persistent ability data.
-    static void withoutGrant(AbilityTracker tracker, Runnable save) {
-        boolean owned = tracker.isGrantedBy(FLIGHT);
-        if (owned) tracker.removeSource(FLIGHT);
-        try { save.run(); }
-        finally { if (owned) tracker.addSource(FLIGHT); }
-    }
-    public void save(ServerPlayer player, Runnable save) {
-        boolean flying = player.getAbilities().flying;
-        try { withoutGrant(VanillaAbilities.ALLOW_FLYING.getTracker(player), save); }
-        finally {
-            // PAL treats actual flying as client-controlled, unlike the permission to fly.
-            if (flying && player.getAbilities().mayfly && !player.getAbilities().flying) {
-                player.getAbilities().flying = true;
-                player.onUpdateAbilities();
-            }
-        }
-    }
+    public void save(ServerPlayer player, Runnable save) { mod.abilities.save(player, save); }
 }

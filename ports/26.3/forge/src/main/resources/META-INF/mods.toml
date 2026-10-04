@@ -1,0 +1,15 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="Not specified"
+[[mods]]
+modId="flightblock"
+version="${version}"
+displayName="FlightBlock"
+description="Tiered timed flight target blocks"
+[[dependencies.flightblock]]
+modId="minecraft"
+type="required"
+mandatory=true
+versionRange="[26.3,26.4)"
+ordering="NONE"
+side="BOTH"
