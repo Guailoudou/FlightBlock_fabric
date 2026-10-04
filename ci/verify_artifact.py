@@ -22,7 +22,8 @@ def verify(path, minecraft, loader):
                 assert entry.replace(".", "/") + ".class" in names
             assert any("PlayerAbilityLib" in dep["file"] and dep["file"] in names for dep in metadata["jars"])
         else:
-            descriptor = "META-INF/" + ("neoforge.mods.toml" if loader == "neoforge" else "mods.toml")
+            legacy_neo = loader == "neoforge" and minecraft == "1.20.1"
+            descriptor = "META-INF/" + ("neoforge.mods.toml" if loader == "neoforge" and not legacy_neo else "mods.toml")
             metadata = tomllib.loads(jar.read(descriptor).decode())
             assert metadata["mods"][0]["modId"] == "flightblock"
             assert "${" not in metadata["mods"][0]["version"]
@@ -30,13 +31,13 @@ def verify(path, minecraft, loader):
             dependencies = metadata["dependencies"]["flightblock"]
             minecraft_dependency = next(dep for dep in dependencies if dep["modId"] == "minecraft")
             assert minecraft_dependency["versionRange"] == f"[{minecraft}]"
-            entry = "NeoForgeEntrypoint" if loader == "neoforge" else "ForgeEntrypoint"
+            entry = "NeoForgeEntrypoint" if loader == "neoforge" and not legacy_neo else "ForgeEntrypoint"
             assert f"dev/flightblock/platform/{entry}.class" in names
             assert "fabric.mod.json" not in names
             assert "dev/flightblock/PalFlightAccess.class" not in names
-            if loader == "forge":
+            if loader == "forge" or legacy_neo:
                 assert b"MixinConfigs: flightblock.mixins.json" in jar.read("META-INF/MANIFEST.MF")
-                if minecraft in ("1.21.8", "1.21.4", "1.21.1", "1.20.6", "1.20.4"):
+                if minecraft in ("1.21.8", "1.21.4", "1.21.1", "1.20.6", "1.20.4", "1.20.2", "1.20.1", "1.19.4"):
                     nested = json.loads(jar.read("META-INF/jarjar/metadata.json"))["jars"]
                     assert any("mixinextras" in dep["identifier"]["artifact"] and dep["path"] in names for dep in nested)
             else:

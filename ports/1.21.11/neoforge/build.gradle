@@ -23,10 +23,10 @@ sourceSets.main.resources {
 processResources {
     inputs.property 'version', project.version
     inputs.property 'minecraft_version', mc
-    filesMatching('flightblock.mixins.json') { filter { it.replace('JAVA_25', mc == '1.20.4' ? 'JAVA_17' : 'JAVA_21') } }
+    filesMatching('flightblock.mixins.json') { filter { it.replace('JAVA_25', mc in ['1.20.4', '1.20.2'] ? 'JAVA_17' : 'JAVA_21') } }
     filesMatching('META-INF/*.toml') { expand version: project.version, minecraft_version_range: "[${mc}]" }
 }
-tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = mc == '1.20.4' ? 17 : 21 }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = mc in ['1.20.4', '1.20.2'] ? 17 : 21 }
 
 ext.flightblockSourceRoot = sharedRoot
 ext.flightblockOfficialRuntime = true

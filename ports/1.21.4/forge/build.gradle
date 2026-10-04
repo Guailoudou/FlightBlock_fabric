@@ -2,7 +2,7 @@ plugins { id 'java'; id 'net.minecraftforge.gradle' version '7.0.40'; id 'net.mi
 minecraft { mappings channel: 'official', version: findProperty('minecraft_version') ?: '1.21.4' }
 repositories { minecraft.mavenizer(it); maven fg.forgeMaven; maven fg.minecraftLibsMaven; mavenCentral() }
 dependencies {
-    implementation minecraft.dependency("net.minecraftforge:forge:${findProperty('minecraft_version') ?: '1.21.4'}-${findProperty('forge_version') ?: '54.1.18'}")
+    implementation minecraft.dependency("${findProperty('forge_group') ?: 'net.minecraftforge'}:forge:${findProperty('minecraft_version') ?: '1.21.4'}-${findProperty('forge_version') ?: '54.1.18'}")
     compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
     annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
 }
@@ -14,7 +14,7 @@ file("${sharedRoot}/gradle.properties").withInputStream { sharedProperties.load(
 version = sharedProperties.getProperty('version')
 group = 'dev.flightblock'
 def mc = findProperty('minecraft_version') ?: '1.21.4'
-if (mc in ['1.21.8', '1.21.4', '1.21.1', '1.20.6', '1.20.4']) {
+if (mc in ['1.21.8', '1.21.4', '1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4']) {
     // These Forge releases do not ship MixinExtras, which our WrapMethod hooks need.
     jarJar.register()
     dependencies { jarJar 'io.github.llamalad7:mixinextras-forge:0.5.5' }
@@ -22,8 +22,8 @@ if (mc in ['1.21.8', '1.21.4', '1.21.1', '1.20.6', '1.20.4']) {
     tasks.named('jarJar') { archiveClassifier = null }
     tasks.named('build') { dependsOn 'jarJar' }
 }
-base { archivesName = "flightblock-${mc}-forge" }
-if (mc == '1.20.4') {
+base { archivesName = "flightblock-${mc}-${findProperty('target_loader') ?: 'forge'}" }
+if (mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4']) {
     // Forge through 1.20.4 uses SRG names in production, including Mixin references.
     renamer.mappings(minecraft.dependency.toSrg)
     renamer.enableMixinRefmaps { config 'flightblock.mixins.json'; jar tasks.named('jarJar', Jar) }
@@ -46,12 +46,12 @@ sourceSets.main.resources {
 processResources {
     inputs.property 'version', project.version
     inputs.property 'minecraft_version', mc
-    filesMatching('flightblock.mixins.json') { filter { it.replace('JAVA_25', mc == '1.20.4' ? 'JAVA_17' : 'JAVA_21') } }
+    filesMatching('flightblock.mixins.json') { filter { it.replace('JAVA_25', mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4'] ? 'JAVA_17' : 'JAVA_21') } }
     filesMatching('META-INF/*.toml') { expand version: project.version, minecraft_version_range: "[${mc}]" }
 }
-tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = mc == '1.20.4' ? 17 : 21 }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4'] ? 17 : 21 }
 
 ext.flightblockSourceRoot = sharedRoot
-ext.flightblockOfficialRuntime = mc != '1.20.4'
+ext.flightblockOfficialRuntime = !(mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4'])
 ext.flightblockMinecraftVersion = mc
 apply from: new File(sharedRoot, "gradle/minecraft-1.21.11-source-compat.gradle")
