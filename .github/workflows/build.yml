@@ -19,6 +19,7 @@ jobs:
       targets: ${{ steps.targets.outputs.targets }}
     steps:
       - uses: actions/checkout@v5
+      - run: python ci/test_java8_sources.py
       - id: targets
         run: echo "targets=$(jq -c . ci/targets.json)" >> "$GITHUB_OUTPUT"
 

@@ -12,3 +12,5 @@ crash-reports/
 FlightBlock_Local_Task.txt
 VALIDATION.md
 ARTIFACTS.sha256
+
+__pycache__/

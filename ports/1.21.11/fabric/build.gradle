@@ -9,7 +9,7 @@ def targetLoader = findProperty('target_loader') ?: 'fabric'
 def mc = findProperty('minecraft_version') ?: '1.21.11'
 def api = findProperty('fabric_api_version') ?: '0.141.6+1.21.11'
 def pal = findProperty('pal_version') ?: '1.15.0'
-def javaRelease = mc == '1.17.1' ? 16 : mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1'] ? 17 : 21
+def javaRelease = mc == '1.16.5' ? 8 : mc == '1.17.1' ? 16 : mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5'] ? 17 : 21
 base { archivesName = "flightblock-${mc}-${targetLoader}" }
 repositories {
     maven { url = 'https://maven.ladysnake.org/releases' }
@@ -21,7 +21,7 @@ dependencies {
     if (targetLoader == 'quilt') modImplementation 'org.quiltmc:quilt-loader:0.31.0-beta.4'
     else modImplementation 'net.fabricmc:fabric-loader:0.19.5'
     modImplementation "net.fabricmc.fabric-api:fabric-api:${api}"
-    if (mc in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1']) modImplementation fabricApi.module('fabric-object-builder-api-v1', api)
+    if (mc in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) modImplementation fabricApi.module('fabric-object-builder-api-v1', api)
     // The target's explicit API version must not be replaced by PAL's development dependencies.
     modImplementation("io.github.ladysnake:PlayerAbilityLib:${pal}") { transitive = false }
     include "io.github.ladysnake:PlayerAbilityLib:${pal}"
@@ -41,16 +41,17 @@ def prepareTests = tasks.register('prepareVersionTests', Sync) {
     filteringCharset = 'UTF-8'
     filter { String line ->
         def adapted = line.replace('RecipeMarkerCheck.run()', 'RecipeMarkerCheck21.run()')
-        if (mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1']) adapted = adapted.replace('RecipeMarkerCheck21.run()', 'RecipeMarkerCheckLegacy.run()').replace('import net.minecraft.util.ProblemReporter;', '').replace('.getOrThrow()', '.getOrThrow(false, error -> { throw new IllegalArgumentException(error); })')
-        if (mc in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1']) adapted = adapted.replace('PalCompatibilityCheck.run()', 'LegacyJson.main(new String[0]); PalCompatibilityCheck.run()')
-        if (mc in ['1.21.4', '1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1']) {
+        if (mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) adapted = adapted.replace('RecipeMarkerCheck21.run()', 'RecipeMarkerCheckLegacy.run()').replace('import net.minecraft.util.ProblemReporter;', '').replace('.getOrThrow()', '.getOrThrow(false, error -> { throw new IllegalArgumentException(error); })')
+        if (mc in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) adapted = adapted.replace('PalCompatibilityCheck.run()', 'LegacyJson.main(new String[0]); PalCompatibilityCheck.run()')
+        if (mc in ['1.21.4', '1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) {
             adapted = adapted.replace('import net.minecraft.world.level.storage.TagValueOutput;', '')
                 .replace('var output = TagValueOutput.createWithoutContext(ProblemReporter.DISCARDING)', 'var output = new net.minecraft.nbt.CompoundTag()')
                 .replace('output.buildResult().getListOrEmpty("ability_sources")', 'output.getList("ability_sources", 8)')
         }
-        if (mc == '1.17.1' && (adapted.contains('var ops = net.minecraft.resources.RegistryOps.create(') || adapted.contains('RegistryAccess.fromRegistryOfRegistries('))) adapted = ''
-        if (mc == '1.17.1') adapted = adapted.replace('LegacyRecipes.parse(ops, json)', 'LegacyRecipes.parse(com.mojang.serialization.JsonOps.INSTANCE, json)')
-        if (mc in ['1.19.2', '1.18.2', '1.17.1']) adapted = adapted.replace('BuiltInRegistries', 'Registry').replace('net.minecraft.core.registries.Registry', 'net.minecraft.core.Registry')
+        if (mc in ['1.17.1', '1.16.5'] && (adapted.contains('var ops = net.minecraft.resources.RegistryOps.create(') || adapted.contains('RegistryAccess.fromRegistryOfRegistries('))) adapted = ''
+        if (mc in ['1.17.1', '1.16.5']) adapted = adapted.replace('LegacyRecipes.parse(ops, json)', 'LegacyRecipes.parse(com.mojang.serialization.JsonOps.INSTANCE, json)')
+        if (mc in ['1.19.2', '1.18.2', '1.17.1', '1.16.5']) adapted = adapted.replace('BuiltInRegistries', 'Registry').replace('net.minecraft.core.registries.Registry', 'net.minecraft.core.Registry')
+        if (mc == '1.16.5') adapted = adapted.replace('SharedConstants.tryDetectVersion()', 'SharedConstants.getCurrentVersion()').replace('com.google.gson.JsonParser.parseString(', 'new com.google.gson.JsonParser().parse(')
         adapted
     }
 }
@@ -65,7 +66,7 @@ if (mc == '1.20.6') {
     sourceSets.test.java.setSrcDirs([layout.buildDirectory.dir('version-tests'), layout.buildDirectory.dir('local-version-tests')])
     tasks.named('compileTestJava') { dependsOn prepareLocalTests }
 }
-if (mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1']) {
+if (mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) {
     prepareTests.configure {
         from new File(sharedRoot, 'ports/legacy/nbt/src/test/java')
         filter { it.replace('Recipe.CODEC.parse(', mc == '1.20.4' ? 'Recipe.CODEC.parse(' : 'LegacyRecipes.parse(') }

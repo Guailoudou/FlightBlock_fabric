@@ -24,7 +24,7 @@ tasks.named('shadowJar') {
     mergeServiceFiles()
 }
 base { archivesName = "flightblock-${mc}-${findProperty('target_loader') ?: 'forge'}" }
-if (mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1']) {
+if (mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) {
     // Forge through 1.20.4 uses SRG names in production, including Mixin references.
     renamer.mappings(minecraft.dependency.toSrg)
     renamer.enableMixinRefmaps { config 'flightblock.mixins.json'; jar tasks.named('shadowJar', Jar) }
@@ -47,12 +47,12 @@ sourceSets.main.resources {
 processResources {
     inputs.property 'version', project.version
     inputs.property 'minecraft_version', mc
-    filesMatching('flightblock.mixins.json') { filter { it.replace('JAVA_25', mc == '1.17.1' ? 'JAVA_16' : mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1'] ? 'JAVA_17' : 'JAVA_21') } }
+    filesMatching('flightblock.mixins.json') { filter { it.replace('JAVA_25', mc == '1.16.5' ? 'JAVA_8' : mc == '1.17.1' ? 'JAVA_16' : mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5'] ? 'JAVA_17' : 'JAVA_21') } }
     filesMatching('META-INF/*.toml') { expand version: project.version, minecraft_version_range: "[${mc}]" }
 }
-tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = mc == '1.17.1' ? 16 : mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1'] ? 17 : 21 }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = mc == '1.16.5' ? 8 : mc == '1.17.1' ? 16 : mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5'] ? 17 : 21 }
 
 ext.flightblockSourceRoot = sharedRoot
-ext.flightblockOfficialRuntime = !(mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1'])
+ext.flightblockOfficialRuntime = !(mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5'])
 ext.flightblockMinecraftVersion = mc
 apply from: new File(sharedRoot, "gradle/minecraft-1.21.11-source-compat.gradle")

@@ -10,6 +10,10 @@ def verify(path, minecraft, loader):
     assert f"-{minecraft}-{loader}-" in path.name, path.name
     with zipfile.ZipFile(path) as jar:
         names = set(jar.namelist())
+        if minecraft == "1.16.5":
+            for name in names:
+                if name.startswith("dev/flightblock/") and name.endswith(".class"):
+                    assert int.from_bytes(jar.read(name)[6:8], "big") <= 52, f"Not Java 8 compatible: {name}"
         config = json.loads(jar.read("flightblock.mixins.json"))
         if "refmap" in config:
             assert config["refmap"] in names, "Missing Mixin reference map"
