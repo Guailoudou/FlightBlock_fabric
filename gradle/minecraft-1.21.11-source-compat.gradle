@@ -158,13 +158,15 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
             if (adapted.contains('(LivingDeathEvent event)')) adapted = adapted.replace('event.getPlayer()', 'event.getEntityLiving()')
         }
         if (flightblockMinecraftVersion in ['1.17.1', '1.16.5']) {
-            adapted = adapted.replace('net.minecraftforge.event.server.*', 'net.minecraftforge.fml.event.server.*')
+            adapted = adapted.replace('net.minecraftforge.event.server.*', flightblockMinecraftVersion == '1.17.1' ? 'net.minecraftforge.fmlserverevents.*' : 'net.minecraftforge.fml.event.server.*')
                 .replace('ServerStartedEvent', 'FMLServerStartedEvent').replace('ServerStoppingEvent', 'FMLServerStoppingEvent').replace('ServerStoppedEvent', 'FMLServerStoppedEvent')
             if (adapted.contains('RuntimeChecks.')) adapted = ''
             adapted = adapted.replace('durations.keySet()', 'LegacyJava.keys(durations)').replace('radii.keySet()', 'LegacyJava.keys(radii)').replace('JsonParser.parseString(', 'new JsonParser().parse(')
             adapted = adapted.replace('import org.slf4j.*;', 'import org.apache.logging.log4j.Logger;\nimport org.apache.logging.log4j.LogManager;').replace('LoggerFactory.getLogger(', 'LogManager.getLogger(')
         }
         if (flightblockMinecraftVersion == '1.16.5') {
+            adapted = adapted.replace('p.containerMenu.getCarried()', 'p.getInventory().getCarried()')
+                .replace('new DustParticleOptions(new com.mojang.math.Vector3f((color >> 16 & 255) / 255f, (color >> 8 & 255) / 255f, (color & 255) / 255f), .8f)', 'new DustParticleOptions((color >> 16 & 255) / 255f, (color >> 8 & 255) / 255f, (color & 255) / 255f, .8f)')
             adapted = adapted.replace('source.getPlayer()', 'source.getEntity() instanceof ServerPlayer ? (ServerPlayer)source.getEntity() : null')
                 .replace('public WorldState() {}', 'public WorldState() { super("flightblock_anchors"); }')
                 .replace('private WorldState(List<Anchor> anchors) {', 'private WorldState(List<Anchor> anchors) { this();')
@@ -178,7 +180,7 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
         }
         // These Forge/NeoForge distributions install Minecraft in official names.
         // Fabric/Quilt still require named -> intermediary remapping.
-        if (!legacyNbt) adapted = adapted.replace('CustomData data = result.get(DataComponents.CUSTOM_DATA);', 'java.util.Optional<CustomData> stored = result.getComponentsPatch().get(DataComponents.CUSTOM_DATA);\n        CustomData data = stored == null ? null : stored.orElse(null);')
+        if (!legacyNbt) adapted = adapted.replace('CustomData data = result.get(DataComponents.CUSTOM_DATA);', 'java.util.Optional<? extends CustomData> stored = result.getComponentsPatch().get(DataComponents.CUSTOM_DATA);\n        CustomData data = stored == null ? null : stored.orElse(null);')
         if (project.hasProperty('flightblockOfficialRuntime') && flightblockOfficialRuntime) {
             adapted = adapted.replaceAll('@Mixin\\(([^)]+)\\)', '@Mixin(value = $1, remap = false)')
         }
@@ -189,6 +191,13 @@ def sourcesReady = prepareSources
 if (flightblockMinecraftVersion == '1.16.5') sourcesReady = tasks.register('backportJava8', Exec) {
     dependsOn prepareSources
     commandLine 'python3', new File(flightblockSourceRoot, 'ci/java8_sources.py'), generatedSources.get().asFile
+}
+if (flightblockMinecraftVersion == '1.16.5' && project.hasProperty('flightblockOfficialRuntime')) {
+    def java8Sources = sourcesReady
+    sourcesReady = tasks.register('mapForgeClassNames', Exec) {
+        dependsOn java8Sources
+        commandLine 'python3', new File(flightblockSourceRoot, 'ci/forge16_sources.py'), generatedSources.get().asFile
+    }
 }
 sourceSets.main.java.setSrcDirs([generatedSources])
 tasks.named('compileJava') { dependsOn sourcesReady }
