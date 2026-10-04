@@ -24,10 +24,10 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
             .replace('flightblock$assemble(CraftingInput input, CallbackInfoReturnable', 'flightblock$assemble(CraftingInput input, net.minecraft.core.HolderLookup.Provider registries, CallbackInfoReturnable')
             .replace('recipe.assemble(input)', 'recipe.assemble(input, FlightBlock.INSTANCE.server.registryAccess())')
             .replace('recipe.assemble(CraftingInput.of(3, 3, invalid))', 'recipe.assemble(CraftingInput.of(3, 3, invalid), FlightBlock.INSTANCE.server.registryAccess())')
-        if (flightblockMinecraftVersion in ['1.21.8', '1.21.4']) {
+        if (flightblockMinecraftVersion in ['1.21.8', '1.21.4', '1.21.1']) {
             adapted = adapted.replace('Identifier', 'ResourceLocation').replace('.identifier()', '.location()')
         }
-        if (flightblockMinecraftVersion == '1.21.4') {
+        if (flightblockMinecraftVersion in ['1.21.4', '1.21.1']) {
             adapted = adapted.replace('import net.minecraft.world.level.storage.TagValueInput;', '')
                 .replace('Commands.hasPermission(Commands.LEVEL_GAMEMASTERS)', 'source -> source.hasPermission(2)')
                 .replace('readAdditionalSaveData(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), data))', 'readAdditionalSaveData(data)')
@@ -48,6 +48,12 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
                 adapted = '    @Override public net.minecraft.nbt.CompoundTag save(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) { return (net.minecraft.nbt.CompoundTag)CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, this).getOrThrow(); }\n' + adapted
             }
         }
+        if (flightblockMinecraftVersion == '1.21.1') {
+            adapted = adapted.replace('menu.getResultSlot()', 'menu.getSlot(menu.getResultSlotIndex())')
+                .replace('AbstractContainerMenu menu, ServerLevel level, Player player', 'AbstractContainerMenu menu, net.minecraft.world.level.Level level, Player player')
+                .replace('flightblock$explode(BlockState state, ServerLevel level', 'flightblock$explode(BlockState state, net.minecraft.world.level.Level level')
+                .replace('new DustParticleOptions(color, .8f)', 'new DustParticleOptions(new org.joml.Vector3f((color >> 16 & 255) / 255f, (color >> 8 & 255) / 255f, (color & 255) / 255f), .8f)')
+        }
         // These Forge/NeoForge distributions install Minecraft in official names.
         // Fabric/Quilt still require named -> intermediary remapping.
         if (project.hasProperty('flightblockOfficialRuntime') && flightblockOfficialRuntime) {
@@ -59,3 +65,10 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
 sourceSets.main.java.setSrcDirs([generatedSources, file('src/main/java')])
 tasks.named('compileJava') { dependsOn prepareSources }
 tasks.matching { it.name == 'sourcesJar' }.configureEach { dependsOn prepareSources }
+if (flightblockMinecraftVersion == '1.21.1') {
+    tasks.named('processResources') {
+        filesMatching('data/flightblock/recipe/*.json') {
+            filter { String line -> line.contains('"key":') ? line.replaceAll('"([A-Z])": "([^"]+)"', '"$1": {"item": "$2"}') : line }
+        }
+    }
+}

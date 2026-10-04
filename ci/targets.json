@@ -309,5 +309,49 @@
     "loader": "forge",
     "project": "ports/1.21.4/forge",
     "java": "21"
+  },
+  {
+    "minecraft": "1.21.1",
+    "loader": "fabric",
+    "project": "ports/1.21.11/fabric",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "1.21.1",
+      "target_loader": "fabric",
+      "fabric_api_version": "0.116.17+1.21.1",
+      "pal_version": "1.13.0"
+    }
+  },
+  {
+    "minecraft": "1.21.1",
+    "loader": "quilt",
+    "project": "ports/1.21.11/fabric",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "1.21.1",
+      "target_loader": "quilt",
+      "fabric_api_version": "0.116.17+1.21.1",
+      "pal_version": "1.13.0"
+    }
+  },
+  {
+    "minecraft": "1.21.1",
+    "loader": "forge",
+    "project": "ports/1.21.4/forge",
+    "java": "21",
+    "properties": {
+      "minecraft_version": "1.21.1",
+      "forge_version": "52.1.16"
+    }
+  },
+  {
+    "minecraft": "1.21.1",
+    "loader": "neoforge",
+    "project": "ports/1.21.11/neoforge",
+    "java": "21",
+    "properties": {
+      "minecraft_version": "1.21.1",
+      "neoforge_version": "21.1.255"
+    }
   }
 ]

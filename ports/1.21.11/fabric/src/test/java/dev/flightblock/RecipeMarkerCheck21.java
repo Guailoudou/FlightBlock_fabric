@@ -23,6 +23,19 @@ public final class RecipeMarkerCheck21 {
         if (FlightRecipes.level(ordinary) != 0) throw new AssertionError("Ordinary recipe misidentified");
         ordinary.set(DataComponents.CUSTOM_DATA, CustomData.of(new CompoundTag()));
         if (FlightRecipes.level(ordinary) != 0) throw new AssertionError("Unrelated data misidentified");
-        System.out.println("FLIGHTBLOCK_RECIPE_MARKER_OK: 5 checks passed.");
+        try {
+            var ops = net.minecraft.resources.RegistryOps.create(com.mojang.serialization.JsonOps.INSTANCE,
+                net.minecraft.core.RegistryAccess.fromRegistryOfRegistries(net.minecraft.core.registries.BuiltInRegistries.REGISTRY));
+            var field = net.minecraft.world.item.crafting.ShapedRecipe.class.getDeclaredField("result");
+            field.setAccessible(true);
+            for (int tier = 1; tier <= 3; tier++) {
+                try (var stream = RecipeMarkerCheck21.class.getResourceAsStream("/data/flightblock/recipe/level_" + tier + ".json")) {
+                    var json = com.google.gson.JsonParser.parseString(new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+                    var recipe = net.minecraft.world.item.crafting.Recipe.CODEC.parse(ops, json).getOrThrow();
+                    if (FlightRecipes.level((ItemStack)field.get(recipe)) != tier) throw new AssertionError("Packaged recipe marker lost");
+                }
+            }
+        } catch (Exception e) { throw new AssertionError("Packaged recipe decoding failed", e); }
+        System.out.println("FLIGHTBLOCK_RECIPE_MARKER_OK: 8 checks passed, including packaged recipe decoding.");
     }
 }
