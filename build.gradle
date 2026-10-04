@@ -6,23 +6,23 @@ def targetLoader = findProperty('target_loader') ?: 'fabric'
 if (!(targetLoader in ['fabric', 'quilt'])) throw new GradleException("Unsupported loader: ${targetLoader}")
 base { archivesName = "flightblock-${minecraft_version}-${targetLoader}" }
 
-// 26.1 uses the same gameplay APIs, with three names/signatures changed later.
+// Earlier 26.x versions use the same gameplay APIs, with names/signatures changed later.
 // Generate a compile-time variant instead of probing Minecraft classes at runtime.
-if (minecraft_version in ['26.1', '26.1.1', '26.1.2']) {
+if (minecraft_version in ['26.1', '26.1.1', '26.1.2', '26.2']) {
     def versionSources = layout.buildDirectory.dir('version-sources')
     def prepareSources = tasks.register('prepareVersionSources', Sync) {
         from 'src/main/java'
         into versionSources
         filteringCharset = 'UTF-8'
         filter { String line ->
-            line.replace('EntityTypes.BLOCK_DISPLAY', 'EntityType.BLOCK_DISPLAY')
-                .replace('Recipe.DIRECT_CODEC', 'Recipe.CODEC')
+            def adapted = line.replace('Recipe.DIRECT_CODEC', 'Recipe.CODEC')
                 .replace('p.drop(stack, false, net.minecraft.util.Prediction.PREDICTED)', 'p.drop(stack, false)')
+            minecraft_version == '26.2' ? adapted : adapted.replace('EntityTypes.BLOCK_DISPLAY', 'EntityType.BLOCK_DISPLAY')
         }
     }
     sourceSets.main.java.setSrcDirs([versionSources])
     tasks.named('compileJava') { dependsOn prepareSources }
-    tasks.named('sourcesJar') { dependsOn prepareSources }
+    tasks.matching { it.name == 'sourcesJar' }.configureEach { dependsOn prepareSources }
 }
 
 repositories {
