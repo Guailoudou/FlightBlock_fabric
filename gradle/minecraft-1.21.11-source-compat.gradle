@@ -27,6 +27,11 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
         if (flightblockMinecraftVersion == '1.21.8') {
             adapted = adapted.replace('Identifier', 'ResourceLocation').replace('.identifier()', '.location()')
         }
+        // These Forge/NeoForge distributions install Minecraft in official names.
+        // Fabric/Quilt still require named -> intermediary remapping.
+        if (project.hasProperty('flightblockOfficialRuntime') && flightblockOfficialRuntime) {
+            adapted = adapted.replaceAll('@Mixin\\(([^)]+)\\)', '@Mixin(value = $1, remap = false)')
+        }
         adapted
     }
 }

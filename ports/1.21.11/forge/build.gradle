@@ -34,5 +34,6 @@ processResources {
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = 21 }
 
 ext.flightblockSourceRoot = sharedRoot
+ext.flightblockOfficialRuntime = true
 ext.flightblockMinecraftVersion = mc
 apply from: new File(sharedRoot, "gradle/minecraft-1.21.11-source-compat.gradle")
