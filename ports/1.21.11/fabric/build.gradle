@@ -9,6 +9,7 @@ def targetLoader = findProperty('target_loader') ?: 'fabric'
 def mc = findProperty('minecraft_version') ?: '1.21.11'
 def api = findProperty('fabric_api_version') ?: '0.141.6+1.21.11'
 def pal = findProperty('pal_version') ?: '1.15.0'
+def javaRelease = mc == '1.20.4' ? 17 : 21
 base { archivesName = "flightblock-${mc}-${targetLoader}" }
 repositories {
     maven { url = 'https://maven.ladysnake.org/releases' }
@@ -20,7 +21,7 @@ dependencies {
     if (targetLoader == 'quilt') modImplementation 'org.quiltmc:quilt-loader:0.31.0-beta.4'
     else modImplementation 'net.fabricmc:fabric-loader:0.19.5'
     modImplementation "net.fabricmc.fabric-api:fabric-api:${api}"
-    if (mc in ['1.21.1', '1.20.6']) modImplementation fabricApi.module('fabric-object-builder-api-v1', api)
+    if (mc in ['1.21.1', '1.20.6', '1.20.4']) modImplementation fabricApi.module('fabric-object-builder-api-v1', api)
     modImplementation "io.github.ladysnake:PlayerAbilityLib:${pal}"
     include "io.github.ladysnake:PlayerAbilityLib:${pal}"
     compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
@@ -39,8 +40,9 @@ def prepareTests = tasks.register('prepareVersionTests', Sync) {
     filteringCharset = 'UTF-8'
     filter { String line ->
         def adapted = line.replace('RecipeMarkerCheck.run()', 'RecipeMarkerCheck21.run()')
-        if (mc in ['1.21.1', '1.20.6']) adapted = adapted.replace('RecipeMarkerCheck21.run()', 'RecipeMarkerCheck21.run(); LegacyJson.main(new String[0])')
-        if (mc in ['1.21.4', '1.21.1', '1.20.6']) {
+        if (mc == '1.20.4') adapted = adapted.replace('RecipeMarkerCheck21.run()', 'RecipeMarkerCheckLegacy.run()').replace('import net.minecraft.util.ProblemReporter;', '').replace('.getOrThrow()', '.getOrThrow(false, error -> { throw new IllegalArgumentException(error); })')
+        if (mc in ['1.21.1', '1.20.6', '1.20.4']) adapted = adapted.replace('PalCompatibilityCheck.run()', 'LegacyJson.main(new String[0]); PalCompatibilityCheck.run()')
+        if (mc in ['1.21.4', '1.21.1', '1.20.6', '1.20.4']) {
             adapted = adapted.replace('import net.minecraft.world.level.storage.TagValueOutput;', '')
                 .replace('var output = TagValueOutput.createWithoutContext(ProblemReporter.DISCARDING)', 'var output = new net.minecraft.nbt.CompoundTag()')
                 .replace('output.buildResult().getListOrEmpty("ability_sources")', 'output.getList("ability_sources", 8)')
@@ -59,6 +61,7 @@ if (mc == '1.20.6') {
     sourceSets.test.java.setSrcDirs([layout.buildDirectory.dir('version-tests'), layout.buildDirectory.dir('local-version-tests')])
     tasks.named('compileTestJava') { dependsOn prepareLocalTests }
 }
+if (mc == '1.20.4') sourceSets.test.java.setSrcDirs([layout.buildDirectory.dir('version-tests'), new File(sharedRoot, 'ports/legacy/nbt/src/test/java')])
 loom {
     mixin { useLegacyMixinAp = true; defaultRefmapName = 'flightblock.refmap.json' }
 }
@@ -70,19 +73,27 @@ processResources {
     filesMatching('fabric.mod.json') {
         expand version: project.version, minecraft_version: mc,
             fabric_api_version: api, loader_version: '0.19.5'
-        filter { it.replace('>=25', '>=21').replace('>=1.16.0', ">=${pal}") }
+        filter { it.replace('>=25', ">=${javaRelease}").replace('>=1.16.0', ">=${pal}") }
     }
     filesMatching('flightblock.mixins.json') {
-        filter { it.replace('JAVA_25', 'JAVA_21').replace('"required": true,', '"required": true, "refmap": "flightblock.refmap.json",') }
+        filter { it.replace('JAVA_25', "JAVA_${javaRelease}").replace('"required": true,', '"required": true, "refmap": "flightblock.refmap.json",') }
     }
 }
-tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8'; options.compilerArgs.add '-Werror' }
+tasks.withType(JavaCompile).configureEach { options.release = javaRelease; options.encoding = 'UTF-8'; options.compilerArgs.add '-Werror' }
 java { withSourcesJar() }
 tasks.register('verifyRules', JavaExec) {
     dependsOn testClasses
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'dev.flightblock.RulesCheck'
     enableAssertions = true
+    doFirst {
+        classpath.files.findAll { it.name.contains('object-builder') }.each { file ->
+            def archive = new java.util.zip.ZipFile(file)
+            try {
+                logger.lifecycle("Recipe check object-builder dependency: ${file.name}; builder=${archive.getEntry('net/fabricmc/fabric/api/object/builder/v1/block/entity/FabricBlockEntityType$Builder.class') != null}")
+            } finally { archive.close() }
+        }
+    }
 }
 check.dependsOn verifyRules
 test { enabled = false; dependsOn verifyRules }
