@@ -53,7 +53,7 @@ jobs:
           LOADER: ${{ matrix.target.loader }}
         run: |
           mkdir -p "dist/$MC"
-          find "$PROJECT/build/libs" -maxdepth 1 -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' -exec cp {} "dist/$MC/" \;
+          find "$PROJECT/build/libs" -maxdepth 1 -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' ! -name '*-slim.jar' -exec cp {} "dist/$MC/" \;
           test -n "$(find "dist/$MC" -name "*-$LOADER-*.jar" -print -quit)"
           python ci/verify_artifact.py "dist/$MC" "$MC" "$LOADER"
       - uses: actions/upload-artifact@v4

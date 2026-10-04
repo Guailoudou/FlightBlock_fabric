@@ -35,6 +35,9 @@ def verify(path, minecraft, loader):
             assert "dev/flightblock/PalFlightAccess.class" not in names
             if loader == "forge":
                 assert b"MixinConfigs: flightblock.mixins.json" in jar.read("META-INF/MANIFEST.MF")
+                if minecraft in ("1.21.8", "1.21.4"):
+                    nested = json.loads(jar.read("META-INF/jarjar/metadata.json"))["jars"]
+                    assert any("mixinextras" in dep["identifier"]["artifact"] and dep["path"] in names for dep in nested)
             else:
                 assert metadata["mixins"][0]["config"] == "flightblock.mixins.json"
     print(f"ARTIFACT_OK: {minecraft}/{loader}/{path.name}")

@@ -1,8 +1,8 @@
 plugins { id 'java'; id 'net.minecraftforge.gradle' version '7.0.40'; id 'net.minecraftforge.jarjar' version '0.2.3' }
-minecraft { mappings channel: 'official', version: findProperty('minecraft_version') ?: '1.21.11' }
+minecraft { mappings channel: 'official', version: findProperty('minecraft_version') ?: '1.21.4' }
 repositories { minecraft.mavenizer(it); maven fg.forgeMaven; maven fg.minecraftLibsMaven; mavenCentral() }
 dependencies {
-    implementation minecraft.dependency("net.minecraftforge:forge:${findProperty('minecraft_version') ?: '1.21.11'}-${findProperty('forge_version') ?: '61.2.1'}")
+    implementation minecraft.dependency("net.minecraftforge:forge:${findProperty('minecraft_version') ?: '1.21.4'}-${findProperty('forge_version') ?: '54.1.18'}")
     compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
     annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
 }
@@ -13,7 +13,7 @@ def sharedProperties = new Properties()
 file("${sharedRoot}/gradle.properties").withInputStream { sharedProperties.load(it) }
 version = sharedProperties.getProperty('version')
 group = 'dev.flightblock'
-def mc = findProperty('minecraft_version') ?: '1.21.11'
+def mc = findProperty('minecraft_version') ?: '1.21.4'
 if (mc in ['1.21.8', '1.21.4']) {
     // These Forge releases do not ship MixinExtras, which our WrapMethod hooks need.
     jarJar.register()
