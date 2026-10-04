@@ -1,0 +1,61 @@
+plugins { id 'net.fabricmc.fabric-loom-remap' version '1.17.21' }
+
+def sharedRoot = file('../../..')
+def sharedProperties = new Properties()
+file("${sharedRoot}/gradle.properties").withInputStream { sharedProperties.load(it) }
+version = sharedProperties.getProperty('version')
+group = 'dev.flightblock'
+def targetLoader = findProperty('target_loader') ?: 'fabric'
+base { archivesName = "flightblock-1.21.11-${targetLoader}" }
+repositories {
+    maven { url = 'https://maven.ladysnake.org/releases' }
+    maven { url = 'https://maven.quiltmc.org/repository/release' }
+}
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.11'
+    mappings loom.officialMojangMappings()
+    if (targetLoader == 'quilt') modImplementation 'org.quiltmc:quilt-loader:0.31.0-beta.4'
+    else modImplementation 'net.fabricmc:fabric-loader:0.19.5'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.6+1.21.11'
+    modImplementation 'io.github.ladysnake:PlayerAbilityLib:1.15.0'
+    include 'io.github.ladysnake:PlayerAbilityLib:1.15.0'
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
+}
+ext.flightblockSourceRoot = sharedRoot
+apply from: new File(sharedRoot, 'gradle/minecraft-1.21.11-source-compat.gradle')
+sourceSets.main.resources.srcDir "${sharedRoot}/src/main/resources"
+sourceSets.test.java {
+    srcDir layout.buildDirectory.dir('version-tests')
+    exclude 'dev/flightblock/RecipeMarkerCheck.java'
+}
+def prepareTests = tasks.register('prepareVersionTests', Sync) {
+    from "${sharedRoot}/src/test/java"
+    into layout.buildDirectory.dir('version-tests')
+    filteringCharset = 'UTF-8'
+    filter { it.replace('RecipeMarkerCheck.run()', 'RecipeMarkerCheck21.run()') }
+}
+tasks.named('compileTestJava') { dependsOn prepareTests }
+loom {
+    mixin { useLegacyMixinAp = true; defaultRefmapName = 'flightblock.refmap.json' }
+}
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand version: project.version, minecraft_version: '1.21.11',
+            fabric_api_version: '0.141.6+1.21.11', loader_version: '0.19.5'
+        filter { it.replace('>=25', '>=21').replace('>=1.16.0', '>=1.15.0') }
+    }
+    filesMatching('flightblock.mixins.json') {
+        filter { it.replace('JAVA_25', 'JAVA_21').replace('"required": true,', '"required": true, "refmap": "flightblock.refmap.json",') }
+    }
+}
+tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8' }
+java { withSourcesJar() }
+tasks.register('verifyRules', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'dev.flightblock.RulesCheck'
+    enableAssertions = true
+}
+check.dependsOn verifyRules
+test { enabled = false; dependsOn verifyRules }

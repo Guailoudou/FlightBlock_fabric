@@ -195,5 +195,23 @@
       "minecraft_version": "26.2",
       "neoforge_version": "26.2.0.88"
     }
+  },
+  {
+    "minecraft": "1.21.11",
+    "loader": "fabric",
+    "project": "ports/1.21.11/fabric",
+    "java": "25",
+    "properties": {
+      "target_loader": "fabric"
+    }
+  },
+  {
+    "minecraft": "1.21.11",
+    "loader": "quilt",
+    "project": "ports/1.21.11/fabric",
+    "java": "25",
+    "properties": {
+      "target_loader": "quilt"
+    }
   }
 ]

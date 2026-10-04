@@ -1,0 +1,30 @@
+// Compile a mapped 1.21.11 variant of the shared gameplay sources.
+def generatedSources = layout.buildDirectory.dir('version-sources')
+def prepareSources = tasks.register('prepareVersionSources', Sync) {
+    from new File(flightblockSourceRoot, 'src/main/java')
+    into generatedSources
+    filteringCharset = 'UTF-8'
+    filter { String line ->
+        def adapted = line.replace('Recipe.DIRECT_CODEC', 'Recipe.CODEC')
+            .replace('public abstract class ShapedRecipeMixin {', 'public abstract class ShapedRecipeMixin implements CraftingRecipe {')
+            .replace('p.drop(stack, false, net.minecraft.util.Prediction.PREDICTED)', 'p.drop(stack, false)')
+            .replace('EntityTypes.BLOCK_DISPLAY', 'EntityType.BLOCK_DISPLAY')
+            .replace('ContainerInput', 'ClickType')
+            .replace('ItemInstance', 'ItemStack')
+            .replace('ItemStackTemplate', 'ItemStack')
+            .replace('result.components().get(DataComponentMap.EMPTY, DataComponents.CUSTOM_DATA)', 'result.get(DataComponents.CUSTOM_DATA)')
+            .replace('Identifier.fromNamespaceAndPath("flightblock", "anchors"), WorldState::new', '"flightblock_anchors", WorldState::new')
+            .replace('chunk.getPos().x()', 'chunk.getPos().x')
+            .replace('chunk.getPos().z()', 'chunk.getPos().z')
+            .replace('(level, chunk, generated) -> mod.chunkLoaded(level, chunk)', '(level, chunk) -> mod.chunkLoaded(level, chunk)')
+            .replace('void flightblock$mine(ServerLevel level, ServerPlayer player,', 'void flightblock$mine(net.minecraft.world.level.Level level, net.minecraft.world.entity.player.Player player,')
+            .replace('crafting/CraftingInput;)Lnet/minecraft/world/item/ItemStack;', 'crafting/CraftingInput;Lnet/minecraft/core/HolderLookup$Provider;)Lnet/minecraft/world/item/ItemStack;')
+            .replace('flightblock$assemble(CraftingInput input, CallbackInfoReturnable', 'flightblock$assemble(CraftingInput input, net.minecraft.core.HolderLookup.Provider registries, CallbackInfoReturnable')
+            .replace('recipe.assemble(input)', 'recipe.assemble(input, FlightBlock.INSTANCE.server.registryAccess())')
+            .replace('recipe.assemble(CraftingInput.of(3, 3, invalid))', 'recipe.assemble(CraftingInput.of(3, 3, invalid), FlightBlock.INSTANCE.server.registryAccess())')
+        adapted
+    }
+}
+sourceSets.main.java.setSrcDirs([generatedSources, file('src/main/java')])
+tasks.named('compileJava') { dependsOn prepareSources }
+tasks.matching { it.name == 'sourcesJar' }.configureEach { dependsOn prepareSources }
