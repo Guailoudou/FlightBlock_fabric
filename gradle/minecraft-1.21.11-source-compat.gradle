@@ -166,7 +166,7 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
             adapted = adapted.replace('import org.slf4j.*;', 'import org.apache.logging.log4j.Logger;\nimport org.apache.logging.log4j.LogManager;').replace('LoggerFactory.getLogger(', 'LogManager.getLogger(')
             if (project.hasProperty('flightblockOfficialRuntime')) {
                 def displayTest = flightblockMinecraftVersion == '1.16.5'
-                    ? 'net.minecraftforge.fml.ModLoadingContext.get().registerExtensionPoint(net.minecraftforge.fml.ExtensionPoint.DISPLAYTEST, () -> com.mojang.datafixers.util.Pair.of(() -> net.minecraftforge.fml.network.FMLNetworkConstants.IGNORESERVERONLY, (remote, serverSide) -> true));'
+                    ? 'net.minecraftforge.fml.ModLoadingContext.get().registerExtensionPoint(net.minecraftforge.fml.ExtensionPoint.DISPLAYTEST, () -> org.apache.commons.lang3.tuple.Pair.of(() -> net.minecraftforge.fml.network.FMLNetworkConstants.IGNORESERVERONLY, (remote, serverSide) -> true));'
                     : 'net.minecraftforge.fml.ModLoadingContext.get().registerExtensionPoint(net.minecraftforge.fml.IExtensionPoint.DisplayTest.class, () -> new net.minecraftforge.fml.IExtensionPoint.DisplayTest(() -> net.minecraftforge.fmllegacy.network.FMLNetworkConstants.IGNORESERVERONLY, (remote, serverSide) -> true));'
                 adapted = adapted.replace('FlightBlock mod = new FlightBlock();', displayTest + '\n        FlightBlock mod = new FlightBlock();')
             }
