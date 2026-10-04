@@ -11,6 +11,8 @@ def verify(path, minecraft, loader):
     with zipfile.ZipFile(path) as jar:
         names = set(jar.namelist())
         config = json.loads(jar.read("flightblock.mixins.json"))
+        if "refmap" in config:
+            assert config["refmap"] in names, "Missing Mixin reference map"
         for mixin in config["mixins"]:
             assert f"{config['package'].replace('.', '/')}/{mixin}.class" in names, mixin
         if loader in ("fabric", "quilt"):

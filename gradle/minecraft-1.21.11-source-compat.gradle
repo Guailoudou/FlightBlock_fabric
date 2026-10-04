@@ -6,6 +6,8 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
     filteringCharset = 'UTF-8'
     filter { String line ->
         def adapted = line.replace('Recipe.DIRECT_CODEC', 'Recipe.CODEC')
+            .replace('ServerEntityLevelChangeEvents', 'ServerEntityWorldChangeEvents')
+            .replace('AFTER_PLAYER_CHANGE_LEVEL', 'AFTER_PLAYER_CHANGE_WORLD')
             .replace('public abstract class ShapedRecipeMixin {', 'public abstract class ShapedRecipeMixin implements CraftingRecipe {')
             .replace('p.drop(stack, false, net.minecraft.util.Prediction.PREDICTED)', 'p.drop(stack, false)')
             .replace('EntityTypes.BLOCK_DISPLAY', 'EntityType.BLOCK_DISPLAY')
