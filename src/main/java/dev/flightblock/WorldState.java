@@ -53,6 +53,7 @@ public final class WorldState extends SavedData {
     private final Map<String, String> byPosition = new HashMap<>();
     private final Map<String, Set<String>> byChunk = new HashMap<>();
     private final PriorityQueue<Anchor> deadlines = new PriorityQueue<>(Comparator.comparingLong(Anchor::expiresAt));
+    private final Set<String> inactive = new HashSet<>();
     public WorldState() {}
     private WorldState(List<Anchor> anchors) {
         for (Anchor a : anchors) {
@@ -70,10 +71,13 @@ public final class WorldState extends SavedData {
         byPosition.put(key(a.dimension(), a.position()), a.id());
         byChunk.computeIfAbsent(chunkKey(a.dimension(), a.pos()), k -> new HashSet<>()).add(a.id());
         if (a.activatedAt() > 0 && !a.pendingRemoval()) deadlines.add(a);
+        if (a.activatedAt() == 0 && !a.pendingRemoval()) inactive.add(a.id());
+        else inactive.remove(a.id());
         setDirty();
     }
     public void remove(Anchor a) {
         if (!byId.remove(a.id(), a)) return;
+        inactive.remove(a.id());
         byPosition.remove(key(a.dimension(), a.position()), a.id());
         Set<String> chunk = byChunk.get(chunkKey(a.dimension(), a.pos()));
         if (chunk != null) {
@@ -86,6 +90,7 @@ public final class WorldState extends SavedData {
         Set<String> ids = byChunk.getOrDefault(dim + ":" + x + ":" + z, Set.of());
         return ids.stream().map(byId::get).filter(Objects::nonNull).toList();
     }
+    public List<Anchor> inactive() { return inactive.stream().map(byId::get).filter(Objects::nonNull).toList(); }
     public Anchor pollExpired(long now) {
         while (!deadlines.isEmpty() && deadlines.peek().expiresAt() <= now) {
             Anchor a = deadlines.remove();

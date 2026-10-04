@@ -11,9 +11,11 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.commands.*;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.*;
 import net.minecraft.server.MinecraftServer;
@@ -77,6 +79,7 @@ public final class FlightBlock implements ModInitializer {
             if (++ticks % config.interval() == 0) {
                 for (ServerPlayer p : s.getPlayerList().getPlayers()) flight.check(p);
             }
+            if (ticks % 20 == 0) previewParticles();
         });
         ServerChunkEvents.CHUNK_LOAD.register((level, chunk, generated) -> {
             // The FULL chunk future is not completed inside this callback.
@@ -224,6 +227,19 @@ public final class FlightBlock implements ModInitializer {
         FlightItems.refresh(p.containerMenu.getCarried(), config);
     }
     private long remaining(WorldState.Anchor a) { return Math.max(0, (a.expiresAt() - clock.millis() + 999) / 1000); }
+    private void previewParticles() {
+        for (WorldState.Anchor a : state.inactive()) {
+            ServerLevel level = server.getLevel(ResourceKey.create(Registries.DIMENSION, Identifier.parse(a.dimension())));
+            if (level == null) continue;
+            BlockPos pos = a.pos();
+            LevelChunk chunk = level.getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4);
+            if (chunk == null) continue;
+            if (!chunk.getBlockState(pos).is(Blocks.TARGET)) { invalidate(a); continue; }
+            int color = TextColor.fromLegacyFormat(FlightItems.levelColor(a.level())).getValue();
+            level.sendParticles(new DustParticleOptions(color, .8f), pos.getX() + .5, pos.getY() + 1.25,
+                pos.getZ() + .5, 3, .2, .08, .2, .01);
+        }
+    }
     private int reload(CommandSourceStack source) {
         try {
             Config next = Config.read(configPath);

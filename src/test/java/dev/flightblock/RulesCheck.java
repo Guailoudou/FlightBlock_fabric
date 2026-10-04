@@ -182,6 +182,20 @@ public final class RulesCheck {
             UUID.randomUUID().toString(), 0, 0, false);
         var otherDimension = new WorldState.Anchor("minecraft:the_nether", net.minecraft.core.BlockPos.ZERO.asLong(), 3,
             UUID.randomUUID().toString(), active.activatedAt(), active.expiresAt(), false);
+        WorldState previews = new WorldState();
+        previews.put(unactivated);
+        check(previews.inactive().equals(java.util.List.of(unactivated)));
+        var previewJson = WorldState.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, previews).getOrThrow();
+        WorldState previewRestored = WorldState.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, previewJson).getOrThrow();
+        check(previewRestored.inactive().equals(java.util.List.of(unactivated)));
+        previews.put(unactivated.activate(original, clock));
+        check(previews.inactive().isEmpty());
+        previews.put(unactivated.pending());
+        check(previews.inactive().isEmpty());
+        previews.put(unactivated);
+        check(previews.inactive().size() == 1);
+        previews.remove(unactivated);
+        check(previews.inactive().isEmpty());
         var candidates = java.util.List.of(anchor, larger, unactivated, otherDimension);
         check(FlightManager.selectAnchor(candidates, original, "minecraft:overworld", 70.5, .5, .5, clock.millis()) == larger);
         check(FlightManager.selectAnchor(candidates, original, "minecraft:overworld", 200.5, .5, .5, clock.millis()) == larger);
