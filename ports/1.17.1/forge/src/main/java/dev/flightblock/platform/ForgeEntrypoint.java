@@ -25,13 +25,13 @@ public final class ForgeEntrypoint {
         MinecraftForge.EVENT_BUS.addListener((ServerStoppedEvent event) -> mod.stopped(event.getServer()));
         MinecraftForge.EVENT_BUS.addListener((TickEvent.ServerTickEvent.Post event) -> mod.tick(event.getServer()));
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> mod.registerCommands(event.getDispatcher()));
-        MinecraftForge.EVENT_BUS.addListener((ChunkEvent.Load event) -> { if (event.getLevel() instanceof ServerLevel level) mod.chunkLoaded(level, event.getChunk()); });
-        MinecraftForge.EVENT_BUS.addListener((ChunkEvent.Unload event) -> { if (event.getLevel() instanceof ServerLevel level) mod.chunkUnloaded(level, event.getChunk()); });
-        MinecraftForge.EVENT_BUS.addListener((PlayerInteractEvent.RightClickBlock event) -> { var result = mod.useBlock(event.getEntity(), event.getLevel(), event.getHand(), event.getPos()); if (result != InteractionResult.PASS) { event.setCancellationResult(result); event.setCanceled(true); } });
-        MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent event) -> { if (event.getEntity() instanceof ServerPlayer player) mod.refresh(player); });
-        MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> { if (event.getEntity() instanceof ServerPlayer player) mod.flight.clear(player, false); });
-        MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerRespawnEvent event) -> { if (event.getEntity() instanceof ServerPlayer player) { mod.flight.clear(player, false); mod.refresh(player); } });
-        MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerChangedDimensionEvent event) -> { if (event.getEntity() instanceof ServerPlayer player) mod.flight.clear(player, true); });
-        MinecraftForge.EVENT_BUS.addListener((LivingDeathEvent event) -> { if (event.getEntity() instanceof ServerPlayer player) mod.flight.clear(player, false); });
+        MinecraftForge.EVENT_BUS.addListener((ChunkEvent.Load event) -> { if (event.getLevel() instanceof ServerLevel) mod.chunkLoaded((ServerLevel)event.getLevel(), event.getChunk()); });
+        MinecraftForge.EVENT_BUS.addListener((ChunkEvent.Unload event) -> { if (event.getLevel() instanceof ServerLevel) mod.chunkUnloaded((ServerLevel)event.getLevel(), event.getChunk()); });
+        MinecraftForge.EVENT_BUS.addListener((PlayerInteractEvent.RightClickBlock event) -> { InteractionResult result = mod.useBlock(event.getEntity(), event.getLevel(), event.getHand(), event.getPos()); if (result != InteractionResult.PASS) { event.setCancellationResult(result); event.setCanceled(true); } });
+        MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent event) -> { if (event.getEntity() instanceof ServerPlayer) mod.refresh((ServerPlayer)event.getEntity()); });
+        MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> { if (event.getEntity() instanceof ServerPlayer) mod.flight.clear((ServerPlayer)event.getEntity(), false); });
+        MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerRespawnEvent event) -> { if (event.getEntity() instanceof ServerPlayer) { mod.flight.clear((ServerPlayer)event.getEntity(), false); mod.refresh((ServerPlayer)event.getEntity()); } });
+        MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerChangedDimensionEvent event) -> { if (event.getEntity() instanceof ServerPlayer) mod.flight.clear((ServerPlayer)event.getEntity(), true); });
+        MinecraftForge.EVENT_BUS.addListener((LivingDeathEvent event) -> { if (event.getEntity() instanceof ServerPlayer) mod.flight.clear((ServerPlayer)event.getEntity(), false); });
     }
 }

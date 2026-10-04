@@ -158,6 +158,8 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
             if (adapted.contains('(LivingDeathEvent event)')) adapted = adapted.replace('event.getPlayer()', 'event.getEntityLiving()')
         }
         if (flightblockMinecraftVersion in ['1.17.1', '1.16.5']) {
+            adapted = adapted.replace('net.minecraftforge.event.server.*', 'net.minecraftforge.fml.event.server.*')
+                .replace('ServerStartedEvent', 'FMLServerStartedEvent').replace('ServerStoppingEvent', 'FMLServerStoppingEvent').replace('ServerStoppedEvent', 'FMLServerStoppedEvent')
             if (adapted.contains('RuntimeChecks.')) adapted = ''
             adapted = adapted.replace('durations.keySet()', 'LegacyJava.keys(durations)').replace('radii.keySet()', 'LegacyJava.keys(radii)').replace('JsonParser.parseString(', 'new JsonParser().parse(')
             adapted = adapted.replace('import org.slf4j.*;', 'import org.apache.logging.log4j.Logger;\nimport org.apache.logging.log4j.LogManager;').replace('LoggerFactory.getLogger(', 'LogManager.getLogger(')
@@ -171,13 +173,12 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
                 .replace('original.call(menu, level, player, input, result)', 'original.call(menuId, level, player, input, result)')
                 .replace('method = "broadcastFullState"', 'method = "broadcastChanges"')
                 .replace('ClickType type, Player player, CallbackInfo ci)', 'ClickType type, Player player, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.minecraft.world.item.ItemStack> ci)')
-                .replace('net.minecraftforge.event.server.*', 'net.minecraftforge.fml.event.server.*')
-                .replace('ServerStartedEvent', 'FMLServerStartedEvent').replace('ServerStoppingEvent', 'FMLServerStoppingEvent').replace('ServerStoppedEvent', 'FMLServerStoppedEvent')
             if (adapted.contains('state = s.overworld().getDataStorage().computeIfAbsent(')) adapted = '            state = s.overworld().getDataStorage().computeIfAbsent(WorldState::new, "flightblock_anchors");'
             if (adapted.contains('public WorldState()')) adapted += '\n    @Override public void load(net.minecraft.nbt.CompoundTag tag) { WorldState loaded = CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE, tag).getOrThrow(false, error -> { throw new IllegalArgumentException(error); }); byId.clear(); byPosition.clear(); byChunk.clear(); deadlines.clear(); for (Anchor a : loaded.byId.values()) put(a); setDirty(false); }'
         }
         // These Forge/NeoForge distributions install Minecraft in official names.
         // Fabric/Quilt still require named -> intermediary remapping.
+        if (!legacyNbt) adapted = adapted.replace('CustomData data = result.get(DataComponents.CUSTOM_DATA);', 'java.util.Optional<CustomData> stored = result.getComponentsPatch().get(DataComponents.CUSTOM_DATA);\n        CustomData data = stored == null ? null : stored.orElse(null);')
         if (project.hasProperty('flightblockOfficialRuntime') && flightblockOfficialRuntime) {
             adapted = adapted.replaceAll('@Mixin\\(([^)]+)\\)', '@Mixin(value = $1, remap = false)')
         }

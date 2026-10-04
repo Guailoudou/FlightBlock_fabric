@@ -2,7 +2,7 @@
 
 Minecraft Java Edition 的限时飞行标靶 Mod。合成飞行标靶、放置并右键激活后，即可在指定范围内飞行。
 
-正在适配常用 Minecraft 版本及 Fabric、Quilt、Forge、NeoForge。26.1、26.1.1、26.1.2、26.2、26.3 的四种加载器已全部通过 Actions 编译和产物检查；旧版适配状态见 [移植进度](docs/version-porting.md)。各版本分别构建，请选择与游戏版本、加载器一致的 JAR。
+构建矩阵覆盖 18 个常用 Minecraft 版本、67 个加载器组合，包括 Fabric、Quilt、Forge、NeoForge。完整版本范围及 Java 要求见 [版本表](docs/version-porting.md)，编译结果以相应提交的 Actions 状态为准。各版本分别构建，请选择与游戏版本、加载器一致的 JAR。
 
 支持单人世界和专用服务器。专用服务器安装后，玩家可以使用原版客户端连接。
 
@@ -42,7 +42,7 @@ Fabric / Quilt 的飞行权限通过 [Player Ability Lib（PAL）](https://githu
 
 ## 安装
 
-默认 26.3 Fabric 构建的依赖如下；完整构建组合和各版本依赖见 [构建矩阵](ci/targets.json)。26.x 使用 Java 25，1.21.x 使用 Java 21 运行。
+默认 26.3 Fabric 构建的依赖如下；各版本依赖见 [构建矩阵](ci/targets.json)。26.x 使用 Java 25；1.20.6 和 1.21.x 使用 Java 21；1.18.2～1.20.4 使用 Java 17；1.17.1 使用 Java 16；1.16.5 使用 Java 8。
 
 | 依赖 | 版本 |
 | --- | --- |
@@ -157,7 +157,7 @@ Fabric / Quilt 的飞行权限通过 [Player Ability Lib（PAL）](https://githu
 
 ## 从源码构建
 
-安装 JDK 25，并将 `JAVA_HOME` 指向该 JDK。在仓库根目录执行：
+默认构建生成 26.3 Fabric 安装包。安装 JDK 25，并将 `JAVA_HOME` 指向该 JDK。在仓库根目录执行：
 
 **Windows：**
 
@@ -172,10 +172,10 @@ chmod +x gradlew
 ./gradlew --no-daemon clean build
 ```
 
-安装 JAR 输出到 `build/libs/`。Gradle Wrapper 会下载所需 Gradle 版本，构建会自动执行规则和配方回归检查；这些检查不启动 Minecraft 世界。
+安装 JAR 输出到 `build/libs/`。Gradle Wrapper 会下载所需 Gradle 版本，构建会自动执行规则和配方回归检查；这些检查不启动 Minecraft 世界。其他组合的项目路径、构建 JDK 和 Gradle 参数见 [构建矩阵](ci/targets.json) 与 [Actions 工作流](.github/workflows/build.yml)。
 
 ## 兼容说明与问题反馈
 
 发光轮廓是视觉效果，不会照亮周围环境。状态栏可能被其他 Mod 的提示覆盖；修改飞行权限的其他 Mod 也可能产生兼容问题。
 
-反馈问题时，请提交 Minecraft、Fabric Loader、Fabric API 和 FlightBlock 版本、复现步骤，以及游戏或服务器 `logs/latest.log` 中的相关异常。提交日志前请移除个人信息和敏感内容。
+反馈问题时，请提交 Minecraft、加载器和 FlightBlock 版本、复现步骤，以及游戏或服务器 `logs/latest.log` 中的相关异常。Fabric / Quilt 同时提供 Fabric API 版本。提交日志前请移除个人信息和敏感内容。

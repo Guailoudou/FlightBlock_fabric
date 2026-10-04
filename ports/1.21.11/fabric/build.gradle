@@ -75,7 +75,11 @@ if (mc == '1.20.6') {
 if (mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) {
     prepareTests.configure {
         from new File(sharedRoot, 'ports/legacy/nbt/src/test/java')
-        filter { it.replace('Recipe.CODEC.parse(', mc == '1.20.4' ? 'Recipe.CODEC.parse(' : 'LegacyRecipes.parse(') }
+        filter {
+            def adapted = it.replace('Recipe.CODEC.parse(', mc == '1.20.4' ? 'Recipe.CODEC.parse(' : 'LegacyRecipes.parse(')
+            if (mc in ['1.17.1', '1.16.5']) adapted = adapted.replace('LegacyRecipes.parse(ops, json)', 'LegacyRecipes.parse(com.mojang.serialization.JsonOps.INSTANCE, json)')
+            adapted
+        }
     }
     sourceSets.test.java.setSrcDirs([layout.buildDirectory.dir('version-tests')])
 }
@@ -96,7 +100,12 @@ processResources {
         filter { it.replace('JAVA_25', "JAVA_${javaRelease}").replace('"required": true,', '"required": true, "refmap": "flightblock.refmap.json",') }
     }
 }
-tasks.withType(JavaCompile).configureEach { options.release = name == 'compileTestJava' ? Math.max(17, javaRelease) : javaRelease; options.encoding = 'UTF-8'; options.compilerArgs.add '-Werror' }
+tasks.withType(JavaCompile).configureEach {
+    options.release = name == 'compileTestJava' ? Math.max(17, javaRelease) : javaRelease
+    options.encoding = 'UTF-8'
+    options.compilerArgs.add '-Werror'
+    if (options.release.get() == 8) options.compilerArgs.add '-Xlint:-options'
+}
 java { withSourcesJar() }
 tasks.register('verifyRules', JavaExec) {
     dependsOn testClasses

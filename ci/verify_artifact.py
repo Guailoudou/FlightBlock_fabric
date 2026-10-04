@@ -47,7 +47,7 @@ def verify(path, minecraft, loader):
             dependencies = metadata["dependencies"]["flightblock"]
             minecraft_dependency = next(dep for dep in dependencies if dep["modId"] == "minecraft")
             assert minecraft_dependency["versionRange"] == f"[{minecraft}]"
-            entry = "NeoForgeEntrypoint" if loader == "neoforge" and minecraft not in ("1.20.1", "1.20.2", "1.20.4") else "ForgeEntrypoint"
+            entry = "NeoForgeEntrypoint" if loader == "neoforge" and not legacy_neo else "ForgeEntrypoint"
             assert f"dev/flightblock/platform/{entry}.class" in names
             assert "fabric.mod.json" not in names
             assert "dev/flightblock/PalFlightAccess.class" not in names
@@ -64,6 +64,9 @@ def verify(path, minecraft, loader):
                     assert any("mixinextras" in dep["identifier"]["artifact"] and dep["path"] in names for dep in nested)
             else:
                 assert metadata["mixins"][0]["config"] == "flightblock.mixins.json"
+                if minecraft == "1.20.2":
+                    nested = json.loads(jar.read("META-INF/jarjar/metadata.json"))["jars"]
+                    assert any("mixinextras" in dep["identifier"]["artifact"] and dep["path"] in names for dep in nested)
     print(f"ARTIFACT_OK: {minecraft}/{loader}/{path.name}")
 
 
@@ -74,6 +77,6 @@ if __name__ == "__main__":
     parser.add_argument("loader", choices=["fabric", "quilt", "forge", "neoforge"])
     args = parser.parse_args()
     jars = list(args.directory.glob("*.jar"))
-    assert jars, "No installable JARs found"
+    assert len(jars) == 1, f"Expected one installable JAR, found {len(jars)}"
     for path in jars:
         verify(path, args.minecraft, args.loader)

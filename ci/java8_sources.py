@@ -98,10 +98,13 @@ def backport(source):
     source = source.replace("boolean shouldBeSaved()", "boolean save(net.minecraft.nbt.CompoundTag tag)")
     source = source.replace("JsonParser.parseString(", "new JsonParser().parse(")
     if re.search(r"\bvar\s+\w+\s*=|\brecord\s+\w+|instanceof \w+ \w+", source):
-        raise ValueError("Unhandled post-Java-8 language syntax")
+        raise ValueError("Unhandled post-Java-8 language syntax: " + re.search(r"\bvar\s+\w+\s*=|\brecord\s+\w+|instanceof \w+ \w+", source).group())
     return source
 
 
 if __name__ == "__main__":
     for path in Path(sys.argv[1]).rglob("*.java"):
-        path.write_text(backport(path.read_text(encoding="utf-8")), encoding="utf-8")
+        try:
+            path.write_text(backport(path.read_text(encoding="utf-8")), encoding="utf-8")
+        except ValueError as error:
+            raise ValueError(f"{path}: {error}") from error

@@ -9,12 +9,14 @@ import java.util.List;
 public final class LegacyCrafting {
     private LegacyCrafting() {}
     public static CraftingContainer input(int width, int height, List<ItemStack> stacks) {
-        AbstractContainerMenu menu = new AbstractContainerMenu(null, -1) {
-            @Override public boolean stillValid(Player player) { return true; }
-            @Override public ItemStack quickMoveStack(Player player, int slot) { return ItemStack.EMPTY; }
-        };
+        AbstractContainerMenu menu = new Menu();
         TransientCraftingContainer input = new TransientCraftingContainer(menu, width, height);
         for (int i = 0; i < stacks.size(); i++) input.setItem(i, stacks.get(i));
         return input;
+    }
+    private static final class Menu extends AbstractContainerMenu {
+        private Menu() { super(null, -1); }
+        @Override public boolean stillValid(Player player) { return true; }
+        @Override public ItemStack quickMoveStack(Player player, int slot) { return ItemStack.EMPTY; }
     }
 }
