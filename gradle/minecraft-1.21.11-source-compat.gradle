@@ -2,6 +2,7 @@
 def generatedSources = layout.buildDirectory.dir('version-sources')
 def prepareSources = tasks.register('prepareVersionSources', Sync) {
     from new File(flightblockSourceRoot, 'src/main/java')
+    from file('src/main/java')
     into generatedSources
     filteringCharset = 'UTF-8'
     filter { String line ->
@@ -27,6 +28,7 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
         if (flightblockMinecraftVersion in ['1.21.8', '1.21.4', '1.21.1']) {
             adapted = adapted.replace('Identifier', 'ResourceLocation').replace('.identifier()', '.location()')
         }
+        if (flightblockMinecraftVersion == '1.21.8') adapted = adapted.replace('mod.tick(event.server())', 'mod.tick(event.getServer())')
         if (flightblockMinecraftVersion in ['1.21.4', '1.21.1']) {
             adapted = adapted.replace('import net.minecraft.world.level.storage.TagValueInput;', '')
                 .replace('Commands.hasPermission(Commands.LEVEL_GAMEMASTERS)', 'source -> source.hasPermission(2)')
@@ -62,7 +64,7 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
         adapted
     }
 }
-sourceSets.main.java.setSrcDirs([generatedSources, file('src/main/java')])
+sourceSets.main.java.setSrcDirs([generatedSources])
 tasks.named('compileJava') { dependsOn prepareSources }
 tasks.matching { it.name == 'sourcesJar' }.configureEach { dependsOn prepareSources }
 if (flightblockMinecraftVersion == '1.21.1') {
