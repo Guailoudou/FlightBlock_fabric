@@ -20,6 +20,7 @@ dependencies {
     if (targetLoader == 'quilt') modImplementation 'org.quiltmc:quilt-loader:0.31.0-beta.4'
     else modImplementation 'net.fabricmc:fabric-loader:0.19.5'
     modImplementation "net.fabricmc.fabric-api:fabric-api:${api}"
+    if (mc in ['1.21.1', '1.20.6']) modImplementation fabricApi.module('fabric-object-builder-api-v1', api)
     modImplementation "io.github.ladysnake:PlayerAbilityLib:${pal}"
     include "io.github.ladysnake:PlayerAbilityLib:${pal}"
     compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
