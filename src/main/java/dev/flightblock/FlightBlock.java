@@ -111,7 +111,6 @@ public final class FlightBlock implements ModInitializer {
                 a = a.activate(config, clock);
                 state.put(a);
             }
-            glow.ensure(p.level(), a, clock.millis());
             if (!flight.bind(p, a.id())) {
                 UUID owner = flight.owner(a.id());
                 ServerPlayer occupant = owner == null ? null : server.getPlayerList().getPlayer(owner);
@@ -172,7 +171,6 @@ public final class FlightBlock implements ModInitializer {
     public void invalidate(WorldState.Anchor a) {
         if (a == null || state == null) return;
         state.remove(a);
-        glow.remove(a.id());
         flight.forget(a.id());
         if (server != null) for (ServerPlayer p : server.getPlayerList().getPlayers()) flight.check(p);
     }
@@ -206,14 +204,13 @@ public final class FlightBlock implements ModInitializer {
             level.setBlock(a.pos(), Blocks.AIR.defaultBlockState(), 3);
             invalidate(a);
         } else {
-            glow.ensure(level, a, clock.millis());
+            glow.ensure(level, a, flight.owner(a.id()) != null, clock.millis());
         }
     }
     private void expire() {
         if (state == null) return;
         WorldState.Anchor a;
         while ((a = state.pollExpired(clock.millis())) != null) {
-            glow.remove(a.id());
             flight.forget(a.id());
             WorldState.Anchor pending = a.pending();
             state.put(pending);
@@ -227,8 +224,12 @@ public final class FlightBlock implements ModInitializer {
         FlightItems.refresh(p.containerMenu.getCarried(), config);
     }
     private long remaining(WorldState.Anchor a) { return Math.max(0, (a.expiresAt() - clock.millis() + 999) / 1000); }
+    static boolean showsPreviewParticles(WorldState.Anchor a, boolean glowing, long now) {
+        return !glowing && !a.pendingRemoval() && (a.activatedAt() == 0 || a.valid(now));
+    }
     private void previewParticles() {
-        for (WorldState.Anchor a : state.inactive()) {
+        for (WorldState.Anchor a : new ArrayList<>(state.byId.values())) {
+            if (!showsPreviewParticles(a, glow.isGlowing(a.id()), clock.millis())) continue;
             ServerLevel level = server.getLevel(ResourceKey.create(Registries.DIMENSION, Identifier.parse(a.dimension())));
             if (level == null) continue;
             BlockPos pos = a.pos();

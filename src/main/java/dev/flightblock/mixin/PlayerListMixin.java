@@ -18,10 +18,7 @@ public abstract class PlayerListMixin {
     @WrapMethod(method = "save")
     private void flightblock$save(ServerPlayer player, Operation<Void> original) {
         FlightBlock mod = FlightBlock.INSTANCE;
-        boolean owned = mod != null && mod.flight.owns(player) && !player.isCreative() && !player.isSpectator();
-        boolean flying = player.getAbilities().flying, mayfly = player.getAbilities().mayfly;
-        if (owned) { player.getAbilities().mayfly = false; player.getAbilities().flying = false; }
-        try { original.call(player); }
-        finally { if (owned) { player.getAbilities().mayfly = mayfly; player.getAbilities().flying = flying; } }
+        if (mod == null) original.call(player);
+        else mod.flight.save(player, () -> original.call(player));
     }
 }

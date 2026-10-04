@@ -184,18 +184,47 @@ public final class RulesCheck {
             UUID.randomUUID().toString(), active.activatedAt(), active.expiresAt(), false);
         WorldState previews = new WorldState();
         previews.put(unactivated);
-        check(previews.inactive().equals(java.util.List.of(unactivated)));
+        check(FlightBlock.showsPreviewParticles(unactivated, false, clock.millis()));
         var previewJson = WorldState.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, previews).getOrThrow();
         WorldState previewRestored = WorldState.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, previewJson).getOrThrow();
-        check(previewRestored.inactive().equals(java.util.List.of(unactivated)));
-        previews.put(unactivated.activate(original, clock));
-        check(previews.inactive().isEmpty());
-        previews.put(unactivated.pending());
-        check(previews.inactive().isEmpty());
-        previews.put(unactivated);
-        check(previews.inactive().size() == 1);
-        previews.remove(unactivated);
-        check(previews.inactive().isEmpty());
+        check(FlightBlock.showsPreviewParticles(previewRestored.byId.get(unactivated.id()), false, clock.millis()));
+        var idleActivated = unactivated.activate(original, clock);
+        check(FlightBlock.showsPreviewParticles(idleActivated, false, clock.millis()));
+        check(!FlightBlock.showsPreviewParticles(idleActivated, true, clock.millis()));
+        check(!FlightBlock.showsPreviewParticles(idleActivated, false, idleActivated.expiresAt()));
+        check(!FlightBlock.showsPreviewParticles(unactivated.pending(), false, clock.millis()));
+        check(!FlightBlock.showsPreviewParticles(idleActivated.pending(), false, clock.millis()));
+        check(!FlightBlock.showsPreviewParticles(unactivated, true, clock.millis()));
+        FlightBindings visualUsers = new FlightBindings();
+        check(!BlockGlow.shouldGlow(unactivated, true, clock.millis()));
+        check(!BlockGlow.shouldGlow(idleActivated, visualUsers.owner(idleActivated.id()) != null, clock.millis()));
+        check(visualUsers.bind(alice, idleActivated.id()));
+        check(BlockGlow.shouldGlow(idleActivated, visualUsers.owner(idleActivated.id()) != null, clock.millis()));
+        check(!visualUsers.unbind(bob, idleActivated.id()));
+        check(BlockGlow.shouldGlow(idleActivated, visualUsers.owner(idleActivated.id()) != null, clock.millis()));
+        check(visualUsers.unbind(alice, idleActivated.id()));
+        check(!BlockGlow.shouldGlow(idleActivated, visualUsers.owner(idleActivated.id()) != null, clock.millis()));
+        check(FlightBlock.showsPreviewParticles(idleActivated, false, clock.millis()));
+        check(visualUsers.bind(bob, idleActivated.id()));
+        check(BlockGlow.shouldGlow(idleActivated, visualUsers.owner(idleActivated.id()) != null, clock.millis()));
+        visualUsers.clear(bob);
+        check(!BlockGlow.shouldGlow(idleActivated, visualUsers.owner(idleActivated.id()) != null, clock.millis()));
+        check(visualUsers.bind(alice, idleActivated.id()));
+        visualUsers.forget(idleActivated.id());
+        var replaced = new WorldState.Anchor(idleActivated.dimension(), new net.minecraft.core.BlockPos(10, 64, 10).asLong(),
+            idleActivated.level(), idleActivated.id(), idleActivated.activatedAt(), idleActivated.expiresAt(), false);
+        check(!BlockGlow.shouldGlow(replaced, visualUsers.owner(replaced.id()) != null, clock.millis()));
+        check(FlightBlock.showsPreviewParticles(replaced, false, clock.millis()));
+        check(replaced.activatedAt() == idleActivated.activatedAt() && replaced.expiresAt() == idleActivated.expiresAt());
+        check(!BlockGlow.shouldGlow(replaced, true, replaced.expiresAt()));
+        check(!BlockGlow.shouldGlow(replaced.pending(), true, clock.millis()));
+        previews.put(idleActivated);
+        var restoredActive = WorldState.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE,
+            WorldState.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, previews).getOrThrow()).getOrThrow()
+            .byId.get(idleActivated.id());
+        check(!BlockGlow.shouldGlow(restoredActive, false, clock.millis()));
+        check(FlightBlock.showsPreviewParticles(restoredActive, false, clock.millis()));
+        check(restoredActive.expiresAt() == idleActivated.expiresAt());
         var candidates = java.util.List.of(anchor, larger, unactivated, otherDimension);
         check(FlightManager.selectAnchor(candidates, original, "minecraft:overworld", 70.5, .5, .5, clock.millis()) == larger);
         check(FlightManager.selectAnchor(candidates, original, "minecraft:overworld", 200.5, .5, .5, clock.millis()) == larger);
@@ -231,5 +260,6 @@ public final class RulesCheck {
         check(pending.isDirty());
         System.out.println("FLIGHTBLOCK_RULES_OK: " + checks + " checks passed.");
         RecipeMarkerCheck.run();
+        PalCompatibilityCheck.run();
     }
 }

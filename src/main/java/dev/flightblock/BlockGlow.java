@@ -14,8 +14,16 @@ import java.util.*;
 /** Temporary vanilla display entities: no world edits or entity registrations. */
 public final class BlockGlow {
     private final Map<String, Glow> displays = new HashMap<>();
-    public void ensure(ServerLevel level, WorldState.Anchor anchor, long now) {
-        if (!anchor.valid(now) || level.getChunkSource().getChunkNow(anchor.pos().getX() >> 4, anchor.pos().getZ() >> 4) == null) return;
+    public boolean isGlowing(String id) {
+        Glow glow = displays.get(id);
+        return glow != null && !glow.isRemoved() && glow.isCurrentlyGlowing();
+    }
+    static boolean shouldGlow(WorldState.Anchor anchor, boolean bound, long now) {
+        return bound && anchor.valid(now);
+    }
+    public void ensure(ServerLevel level, WorldState.Anchor anchor, boolean bound, long now) {
+        if (!shouldGlow(anchor, bound, now)) { remove(anchor.id()); return; }
+        if (level.getChunkSource().getChunkNow(anchor.pos().getX() >> 4, anchor.pos().getZ() >> 4) == null) return;
         Glow old = displays.get(anchor.id());
         if (old != null && !old.isRemoved()) return;
         Glow glow = new Glow(level, anchor);
