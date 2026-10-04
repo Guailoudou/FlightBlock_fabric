@@ -31,7 +31,10 @@ def verify(path, minecraft, loader):
                 "BlockItemMixin": ("placeBlock",),
                 "LevelChunkMixin": ("setBlockState",),
                 "PlayerListMixin": ("save",),
+                "GameModeMixin": ("setGameModeForPlayer" if minecraft == "1.16.5" else "changeGameModeForPlayer",),
             }
+            if minecraft in ('1.16.5', '1.17.1', '1.18.2', '1.19.2', '1.19.4', '1.20.1', '1.20.2'):
+                required_hooks['ExplosionMixin'] = ('getDrops',)
             for mixin, hooks in required_hooks.items():
                 entries = mappings.get("dev/flightblock/mixin/" + mixin, {})
                 for hook in hooks:
