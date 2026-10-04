@@ -1,0 +1,17 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="Not specified"
+[[mods]]
+modId="flightblock"
+version="${version}"
+displayName="FlightBlock"
+description="Tiered timed flight target blocks"
+[[dependencies.flightblock]]
+modId="minecraft"
+type="required"
+mandatory=true
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
+[[mixins]]
+config="flightblock.mixins.json"

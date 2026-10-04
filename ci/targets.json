@@ -213,5 +213,17 @@
     "properties": {
       "target_loader": "quilt"
     }
+  },
+  {
+    "minecraft": "1.21.11",
+    "loader": "neoforge",
+    "project": "ports/1.21.11/neoforge",
+    "java": "21"
+  },
+  {
+    "minecraft": "1.21.11",
+    "loader": "forge",
+    "project": "ports/1.21.11/forge",
+    "java": "21"
   }
 ]

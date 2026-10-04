@@ -1,0 +1,38 @@
+plugins { id 'java'; id 'net.minecraftforge.gradle' version '7.0.17' }
+minecraft { mappings channel: 'official', version: '1.21.11' }
+repositories { minecraft.mavenizer(it); maven fg.forgeMaven; maven fg.minecraftLibsMaven; mavenCentral() }
+dependencies {
+    implementation minecraft.dependency("net.minecraftforge:forge:${findProperty('minecraft_version') ?: '1.21.11'}-${findProperty('forge_version') ?: '61.2.1'}")
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
+    annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
+}
+jar { manifest { attributes 'MixinConfigs': 'flightblock.mixins.json' } }
+
+def sharedRoot = file('../../..')
+def sharedProperties = new Properties()
+file("${sharedRoot}/gradle.properties").withInputStream { sharedProperties.load(it) }
+version = sharedProperties.getProperty('version')
+group = 'dev.flightblock'
+def mc = findProperty('minecraft_version') ?: '1.21.11'
+base { archivesName = "flightblock-${mc}-forge" }
+java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
+sourceSets.main.java {
+    srcDir "${sharedRoot}/src/main/java"
+    exclude 'dev/flightblock/platform/FabricEntrypoint.java'
+    exclude 'dev/flightblock/PalFlightAccess.java'
+}
+sourceSets.main.resources {
+    srcDir "${sharedRoot}/src/main/resources"
+    exclude 'fabric.mod.json'
+}
+processResources {
+    inputs.property 'version', project.version
+    inputs.property 'minecraft_version', mc
+    filesMatching('flightblock.mixins.json') { filter { it.replace('JAVA_25', 'JAVA_21') } }
+    filesMatching('META-INF/*.toml') { expand version: project.version, minecraft_version_range: "[${mc}]" }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = 21 }
+
+ext.flightblockSourceRoot = sharedRoot
+ext.flightblockMinecraftVersion = mc
+apply from: new File(sharedRoot, "gradle/minecraft-1.21.11-source-compat.gradle")
