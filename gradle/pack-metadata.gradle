@@ -28,6 +28,8 @@ def generatePackMetadata = tasks.register('generatePackMetadata') {
             pack.pack_format = formats.data
             pack['forge:data_pack_format'] = formats.data
             pack['forge:resource_pack_format'] = formats.resource
+            pack['neoforge:data_pack_format'] = formats.data
+            pack['neoforge:resource_pack_format'] = formats.resource
         }
         def output = packFile.get().asFile
         output.parentFile.mkdirs()

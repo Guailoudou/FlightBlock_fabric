@@ -63,6 +63,7 @@ def verify(path, minecraft, loader):
             if loader == "forge" or legacy_neo:
                 assert b"MixinConfigs: flightblock.mixins.json" in jar.read("META-INF/MANIFEST.MF")
                 if minecraft in ("1.17.1", "1.16.5"):
+                    assert b'registerExtensionPoint' in jar.read('dev/flightblock/platform/ForgeEntrypoint.class'), 'Missing legacy vanilla-client compatibility registration'
                     assert config["plugin"] == "dev.flightblock.LegacyMixinPlugin"
                     assert "dev/flightblock/LegacyMixinPlugin.class" in names
                     assert "dev/flightblock/internal/mixinextras/MixinExtrasBootstrap.class" in names
