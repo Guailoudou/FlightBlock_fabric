@@ -24,6 +24,9 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
             .replace('flightblock$assemble(CraftingInput input, CallbackInfoReturnable', 'flightblock$assemble(CraftingInput input, net.minecraft.core.HolderLookup.Provider registries, CallbackInfoReturnable')
             .replace('recipe.assemble(input)', 'recipe.assemble(input, FlightBlock.INSTANCE.server.registryAccess())')
             .replace('recipe.assemble(CraftingInput.of(3, 3, invalid))', 'recipe.assemble(CraftingInput.of(3, 3, invalid), FlightBlock.INSTANCE.server.registryAccess())')
+        if (flightblockMinecraftVersion == '1.21.8') {
+            adapted = adapted.replace('Identifier', 'ResourceLocation').replace('.identifier()', '.location()')
+        }
         adapted
     }
 }
