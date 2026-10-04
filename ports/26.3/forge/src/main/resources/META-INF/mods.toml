@@ -5,6 +5,7 @@ license="Not specified"
 modId="flightblock"
 version="${version}"
 displayName="FlightBlock"
+displayTest="IGNORE_ALL_VERSION"
 description="Tiered timed flight target blocks"
 [[dependencies.flightblock]]
 modId="minecraft"

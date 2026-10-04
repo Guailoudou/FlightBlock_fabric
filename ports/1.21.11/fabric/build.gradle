@@ -75,7 +75,7 @@ processResources {
         filter { it.replace('JAVA_25', 'JAVA_21').replace('"required": true,', '"required": true, "refmap": "flightblock.refmap.json",') }
     }
 }
-tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8' }
+tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8'; options.compilerArgs.add '-Werror' }
 java { withSourcesJar() }
 tasks.register('verifyRules', JavaExec) {
     dependsOn testClasses

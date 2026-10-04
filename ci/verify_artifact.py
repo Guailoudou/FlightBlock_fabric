@@ -26,6 +26,7 @@ def verify(path, minecraft, loader):
             metadata = tomllib.loads(jar.read(descriptor).decode())
             assert metadata["mods"][0]["modId"] == "flightblock"
             assert "${" not in metadata["mods"][0]["version"]
+            assert metadata["mods"][0]["displayTest"] == "IGNORE_ALL_VERSION"
             dependencies = metadata["dependencies"]["flightblock"]
             minecraft_dependency = next(dep for dep in dependencies if dep["modId"] == "minecraft")
             assert minecraft_dependency["versionRange"] == f"[{minecraft}]"
