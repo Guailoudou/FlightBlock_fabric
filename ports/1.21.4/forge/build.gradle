@@ -4,6 +4,7 @@ repositories { minecraft.mavenizer(it); maven fg.forgeMaven; maven fg.minecraftL
 dependencies {
     implementation minecraft.dependency("${findProperty('forge_group') ?: 'net.minecraftforge'}:forge:${findProperty('minecraft_version') ?: '1.21.4'}-${findProperty('forge_version') ?: '54.1.18'}")
     compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
+    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.5.5'
     annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
 }
 jar { manifest { attributes 'MixinConfigs': 'flightblock.mixins.json' } }
@@ -46,6 +47,7 @@ sourceSets.main.resources {
 processResources {
     inputs.property 'version', project.version
     inputs.property 'minecraft_version', mc
+    if (!(mc in ['1.21.8', '1.21.4', '1.21.1', '1.20.6'])) filesMatching('flightblock.mixins.json') { filter { it.replace('"required": true,', '"required": true, "refmap": "main.refmap.json",') } }
     filesMatching('flightblock.mixins.json') { filter { it.replace('JAVA_25', mc == '1.17.1' ? 'JAVA_16' : mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1'] ? 'JAVA_17' : 'JAVA_21') } }
     filesMatching('META-INF/*.toml') { expand version: project.version, minecraft_version_range: "[${mc}]" }
 }

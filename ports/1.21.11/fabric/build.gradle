@@ -26,6 +26,7 @@ dependencies {
     modImplementation("io.github.ladysnake:PlayerAbilityLib:${pal}") { transitive = false }
     include "io.github.ladysnake:PlayerAbilityLib:${pal}"
     compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
+    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.5.5'
 }
 ext.flightblockSourceRoot = sharedRoot
 ext.flightblockMinecraftVersion = mc

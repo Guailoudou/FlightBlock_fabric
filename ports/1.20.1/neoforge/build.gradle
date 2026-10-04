@@ -3,6 +3,7 @@ legacyForge { enable { neoForgeVersion = "1.20.1-${findProperty('neoforge_versio
 repositories { mavenCentral() }
 dependencies {
     compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
+    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.5.5'
     annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
     jarJar('io.github.llamalad7:mixinextras-forge') { version { strictly '[0.5.5,)'; prefer '0.5.5' } }
 }

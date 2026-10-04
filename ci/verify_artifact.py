@@ -17,6 +17,18 @@ def verify(path, minecraft, loader):
         config = json.loads(jar.read("flightblock.mixins.json"))
         if "refmap" in config:
             assert config["refmap"] in names, "Missing Mixin reference map"
+            mappings = json.loads(jar.read(config["refmap"]))["mappings"]
+            required_hooks = {
+                "CraftingMenuMixin": ("slotChangedCraftingGrid", "quickMoveStack"),
+                "ResultSlotMixin": ("onTake",),
+                "BlockItemMixin": ("placeBlock",),
+                "LevelChunkMixin": ("setBlockState",),
+                "PlayerListMixin": ("save",),
+            }
+            for mixin, hooks in required_hooks.items():
+                entries = mappings.get("dev/flightblock/mixin/" + mixin, {})
+                for hook in hooks:
+                    assert any(key.split("(")[0] == hook and value for key, value in entries.items()), f"Missing injected method mapping: {mixin}.{hook}"
         for mixin in config["mixins"]:
             assert f"{config['package'].replace('.', '/')}/{mixin}.class" in names, mixin
         if loader in ("fabric", "quilt"):
