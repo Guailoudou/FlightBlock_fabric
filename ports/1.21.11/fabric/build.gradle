@@ -18,7 +18,11 @@ repositories {
 dependencies {
     minecraft "com.mojang:minecraft:${mc}"
     mappings loom.officialMojangMappings()
-    if (targetLoader == 'quilt') modImplementation 'org.quiltmc:quilt-loader:0.31.0-beta.4'
+    if (targetLoader == 'quilt') {
+        modImplementation 'org.quiltmc:quilt-loader:0.31.0-beta.4'
+        // Loom reads Fabric's loader libraries to supply the shared Mixin API during compilation.
+        modCompileOnly 'net.fabricmc:fabric-loader:0.19.5'
+    }
     else modImplementation 'net.fabricmc:fabric-loader:0.19.5'
     modImplementation "net.fabricmc.fabric-api:fabric-api:${api}"
     if (mc in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) modImplementation fabricApi.module('fabric-object-builder-api-v1', api)
@@ -52,7 +56,8 @@ def prepareTests = tasks.register('prepareVersionTests', Sync) {
         if (mc in ['1.17.1', '1.16.5'] && (adapted.contains('var ops = net.minecraft.resources.RegistryOps.create(') || adapted.contains('RegistryAccess.fromRegistryOfRegistries('))) adapted = ''
         if (mc in ['1.17.1', '1.16.5']) adapted = adapted.replace('LegacyRecipes.parse(ops, json)', 'LegacyRecipes.parse(com.mojang.serialization.JsonOps.INSTANCE, json)')
         if (mc in ['1.19.2', '1.18.2', '1.17.1', '1.16.5']) adapted = adapted.replace('BuiltInRegistries', 'Registry').replace('net.minecraft.core.registries.Registry', 'net.minecraft.core.Registry')
-        if (mc == '1.16.5') adapted = adapted.replace('SharedConstants.tryDetectVersion()', 'SharedConstants.getCurrentVersion()').replace('com.google.gson.JsonParser.parseString(', 'new com.google.gson.JsonParser().parse(')
+        if (mc == '1.16.5') adapted = adapted.replace('SharedConstants.tryDetectVersion()', 'SharedConstants.getCurrentVersion()')
+        if (mc in ['1.17.1', '1.16.5']) adapted = adapted.replace('com.google.gson.JsonParser.parseString(', 'new com.google.gson.JsonParser().parse(')
         adapted
     }
 }

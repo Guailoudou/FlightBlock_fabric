@@ -51,6 +51,7 @@ public final class BlockGlow {
             PlayerTeam team = level.getScoreboard().getPlayerTeam(teamName);
             if (team == null) team = level.getScoreboard().addPlayerTeam(teamName);
             team.setColor(FlightItems.levelColor(anchor.level()));
+            team.setCollisionRule(net.minecraft.world.scores.Team.CollisionRule.NEVER);
             level.getScoreboard().addPlayerToTeam(getStringUUID(), team);
         }
         void cleanup() { world.getScoreboard().removePlayerFromTeam(getStringUUID()); }

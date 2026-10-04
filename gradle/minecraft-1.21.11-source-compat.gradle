@@ -14,7 +14,7 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
     if (flightblockMinecraftVersion in ['1.18.2', '1.17.1', '1.16.5']) from new File(flightblockSourceRoot, 'ports/legacy/events/src/main/java')
     if (flightblockMinecraftVersion in ['1.18.2', '1.17.1', '1.16.5']) from new File(flightblockSourceRoot, 'ports/legacy/messages/src/main/java')
     if (flightblockMinecraftVersion in ['1.17.1', '1.16.5'] && project.hasProperty('flightblockOfficialRuntime')) from new File(flightblockSourceRoot, 'ports/legacy/shadow/src/main/java')
-    if (flightblockMinecraftVersion == '1.16.5') from new File(flightblockSourceRoot, 'ports/legacy/java8/src/main/java')
+    if (flightblockMinecraftVersion in ['1.17.1', '1.16.5']) from new File(flightblockSourceRoot, 'ports/legacy/java8/src/main/java')
     if (legacyRecipes) from new File(flightblockSourceRoot, 'ports/legacy/recipes/src/main/java')
     if (legacyNbt) from new File(flightblockSourceRoot, 'ports/legacy/nbt/src/main/java')
     from file('src/main/java')
@@ -132,6 +132,8 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
         if (flightblockMinecraftVersion == '1.19.4') adapted = adapted.replace('p.serverLevel()', 'p.getLevel()').replace('player.level()', 'player.getLevel()').replace('player.onGround()', 'player.isOnGround()').replace('LootParams', 'LootContext').replace('TransientCraftingContainer', 'CraftingContainer').replace('source.sendSuccess(() -> ', 'source.sendSuccess(').replace('LootParams', 'LootContext')
         if (flightblockMinecraftVersion in ['1.19.2', '1.18.2', '1.17.1', '1.16.5']) {
             adapted = adapted.replace('player.level()', 'player.getLevel()').replace('p.serverLevel()', 'p.getLevel()')
+                .replace('entity.setTarget(p.getUUID())', 'entity.setOwner(p.getUUID())')
+                .replace('current.isInfiniteDuration()', '(current.getDuration() < 0)')
                 .replace('player.onGround()', 'player.isOnGround()').replace('LootParams', 'LootContext')
                 .replace('Registries.DIMENSION', 'Registry.DIMENSION_REGISTRY').replace('import net.minecraft.core.registries.Registries;', 'import net.minecraft.core.Registry;')
                 .replace('BuiltInRegistries', 'Registry').replace('import net.minecraft.core.registries.Registry;', 'import net.minecraft.core.Registry;')
@@ -148,12 +150,16 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
             adapted = adapted.replace('net.minecraft.network.chat.Component.literal(', 'new net.minecraft.network.chat.TextComponent(').replace('Component.literal(', 'new net.minecraft.network.chat.TextComponent(')
                 .replace('p.sendSystemMessage(', 'LegacyMessages.send(p, ').replace('player.sendSystemMessage(', 'LegacyMessages.send(player, ')
                 .replace('net.minecraftforge.event.level.ChunkEvent', 'net.minecraftforge.event.world.ChunkEvent')
+                .replace('Component.empty()', 'new net.minecraft.network.chat.TextComponent("")')
+                .replace('source.getPlayer()', 'source.getEntity() instanceof ServerPlayer ? (ServerPlayer)source.getEntity() : null')
+                .replace('c.getSource().getPlayer()', 'c.getSource().getEntity() instanceof ServerPlayer ? (ServerPlayer)c.getSource().getEntity() : null')
                 .replace('net.fabricmc.fabric.api.command.v2.', 'net.fabricmc.fabric.api.command.v1.').replace('(dispatcher, access, environment)', '(dispatcher, dedicated)')
                 .replace('event.getLevel()', 'event.getWorld()').replace('event.getEntity()', 'event.getPlayer()')
             if (adapted.contains('(LivingDeathEvent event)')) adapted = adapted.replace('event.getPlayer()', 'event.getEntityLiving()')
         }
         if (flightblockMinecraftVersion in ['1.17.1', '1.16.5']) {
             if (adapted.contains('RuntimeChecks.')) adapted = ''
+            adapted = adapted.replace('durations.keySet()', 'LegacyJava.keys(durations)').replace('radii.keySet()', 'LegacyJava.keys(radii)').replace('JsonParser.parseString(', 'new JsonParser().parse(')
             adapted = adapted.replace('import org.slf4j.*;', 'import org.apache.logging.log4j.Logger;\nimport org.apache.logging.log4j.LogManager;').replace('LoggerFactory.getLogger(', 'LogManager.getLogger(')
         }
         if (flightblockMinecraftVersion == '1.16.5') {
