@@ -1,18 +1,21 @@
 // Compile mapped variants of the shared gameplay sources.
-def legacyNbt = flightblockMinecraftVersion in ['1.20.4', '1.20.2', '1.20.1', '1.19.4']
-def legacyRecipes = flightblockMinecraftVersion in ['1.20.2', '1.20.1', '1.19.4']
+def legacyNbt = flightblockMinecraftVersion in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2']
+def legacyRecipes = flightblockMinecraftVersion in ['1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2']
 def generatedSources = layout.buildDirectory.dir('version-sources')
 def prepareSources = tasks.register('prepareVersionSources', Sync) {
     from(new File(flightblockSourceRoot, 'src/main/java')) {
         if (legacyNbt) exclude 'dev/flightblock/FlightItems.java'
+        if (flightblockMinecraftVersion in ['1.19.2', '1.18.2']) exclude 'dev/flightblock/BlockGlow.java'
         if (legacyRecipes) exclude 'dev/flightblock/mixin/ExplosionMixin.java'
     }
+    if (flightblockMinecraftVersion in ['1.19.2', '1.18.2']) from new File(flightblockSourceRoot, 'ports/legacy/shulker/src/main/java')
+    if (flightblockMinecraftVersion == '1.18.2') from new File(flightblockSourceRoot, 'ports/legacy/messages/src/main/java')
     if (legacyRecipes) from new File(flightblockSourceRoot, 'ports/legacy/recipes/src/main/java')
     if (legacyNbt) from new File(flightblockSourceRoot, 'ports/legacy/nbt/src/main/java')
     from file('src/main/java')
-    if (flightblockMinecraftVersion in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4']) {
+    if (flightblockMinecraftVersion in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2']) {
         from(new File(flightblockSourceRoot, 'ports/legacy/common/src/main/java')) {
-            if (!(flightblockMinecraftVersion in ['1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4'])) include '**/LegacyJson.java'
+            if (!(flightblockMinecraftVersion in ['1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2'])) include '**/LegacyJson.java'
         }
     }
     into generatedSources
@@ -37,11 +40,11 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
             .replace('flightblock$assemble(CraftingInput input, CallbackInfoReturnable', 'flightblock$assemble(CraftingInput input, net.minecraft.core.HolderLookup.Provider registries, CallbackInfoReturnable')
             .replace('recipe.assemble(input)', 'recipe.assemble(input, FlightBlock.INSTANCE.server.registryAccess())')
             .replace('recipe.assemble(CraftingInput.of(3, 3, invalid))', 'recipe.assemble(CraftingInput.of(3, 3, invalid), FlightBlock.INSTANCE.server.registryAccess())')
-        if (flightblockMinecraftVersion in ['1.21.8', '1.21.4', '1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4']) {
+        if (flightblockMinecraftVersion in ['1.21.8', '1.21.4', '1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2']) {
             adapted = adapted.replace('Identifier', 'ResourceLocation').replace('.identifier()', '.location()')
         }
         if (flightblockMinecraftVersion == '1.21.8') adapted = adapted.replace('mod.tick(event.server())', 'mod.tick(event.getServer())')
-        if (flightblockMinecraftVersion in ['1.21.4', '1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4']) {
+        if (flightblockMinecraftVersion in ['1.21.4', '1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2']) {
             adapted = adapted.replace('import net.minecraft.world.level.storage.TagValueInput;', '')
                 .replace('Commands.hasPermission(Commands.LEVEL_GAMEMASTERS)', 'source -> source.hasPermission(2)')
                 .replace('readAdditionalSaveData(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), data))', 'readAdditionalSaveData(data)')
@@ -62,18 +65,18 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
                 adapted = '    @Override public net.minecraft.nbt.CompoundTag save(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) { return (net.minecraft.nbt.CompoundTag)CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, this).getOrThrow(); }\n' + adapted
             }
         }
-        if (flightblockMinecraftVersion in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4']) {
+        if (flightblockMinecraftVersion in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2']) {
             adapted = adapted.replace('menu.getResultSlot()', 'menu.getSlot(menu.getResultSlotIndex())')
                 .replace('AbstractContainerMenu menu, ServerLevel level, Player player', 'AbstractContainerMenu menu, net.minecraft.world.level.Level level, Player player')
                 .replace('flightblock$explode(BlockState state, ServerLevel level', 'flightblock$explode(BlockState state, net.minecraft.world.level.Level level')
                 .replace('new DustParticleOptions(color, .8f)', 'new DustParticleOptions(new org.joml.Vector3f((color >> 16 & 255) / 255f, (color >> 8 & 255) / 255f, (color & 255) / 255f), .8f)')
         }
-        if (flightblockMinecraftVersion in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4']) {
+        if (flightblockMinecraftVersion in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2']) {
             adapted = adapted.replace('import com.google.gson.Strictness;', '')
                 .replace('reader.setStrictness(Strictness.STRICT);', 'reader.setLenient(false); LegacyJson.validate(json);')
                 .replace('JsonElement root = JsonParser.parseReader(reader)', 'JsonElement root = com.google.gson.internal.Streams.parse(reader)')
         }
-        if (flightblockMinecraftVersion in ['1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4']) {
+        if (flightblockMinecraftVersion in ['1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2']) {
             adapted = adapted.replace('import net.minecraft.world.item.crafting.CraftingInput;', 'import net.minecraft.world.inventory.CraftingContainer;')
                 .replace('net.minecraft.resources.ResourceLocation.parse(', 'new net.minecraft.resources.ResourceLocation(')
                 .replace('ResourceLocation.parse(', 'new ResourceLocation(')
@@ -112,12 +115,37 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
                 .replace('(TickEvent.ServerTickEvent.Post event) -> mod.tick(event.getServer())', '(TickEvent.ServerTickEvent event) -> { if (event.phase == TickEvent.Phase.END) mod.tick(mod.server); }')
                 .replace('.getOrThrow()', '.getOrThrow(false, error -> { throw new IllegalArgumentException(error); })')
         }
+        if (flightblockMinecraftVersion == '1.20.2') {
+            if (adapted.contains('return DataResult.success(RecipeSerializer.SHAPED_RECIPE.fromJson(')) adapted = '        return RecipeSerializer.SHAPED_RECIPE.codec().parse(ops, json).map(recipe -> (Recipe<?>)recipe);'
+            else if (adapted.contains('new ResourceLocation("flightblock", "check"), json.getAsJsonObject()')) adapted = ''
+        }
         if (legacyRecipes) adapted = adapted.replace('Recipe.CODEC.parse(', 'LegacyRecipes.parse(')
-        if (flightblockMinecraftVersion in ['1.20.1', '1.19.4']) {
+        if (flightblockMinecraftVersion in ['1.20.1', '1.19.4', '1.19.2', '1.18.2']) {
             if (adapted.contains('public static final SavedData.Factory<WorldState> TYPE')) adapted = ''
             adapted = adapted.replace('computeIfAbsent(WorldState.TYPE, "flightblock_anchors")', 'computeIfAbsent(tag -> WorldState.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE, tag).getOrThrow(false, error -> { throw new IllegalArgumentException(error); }), WorldState::new, "flightblock_anchors")')
         }
-        if (flightblockMinecraftVersion == '1.19.4') adapted = adapted.replace('p.serverLevel()', 'p.getLevel()').replace('LootParams', 'LootContext')
+        if (flightblockMinecraftVersion == '1.19.4') adapted = adapted.replace('p.serverLevel()', 'p.getLevel()').replace('player.level()', 'player.getLevel()').replace('player.onGround()', 'player.isOnGround()').replace('TransientCraftingContainer', 'CraftingContainer').replace('source.sendSuccess(() -> ', 'source.sendSuccess(').replace('LootParams', 'LootContext')
+        if (flightblockMinecraftVersion in ['1.19.2', '1.18.2']) {
+            adapted = adapted.replace('player.level()', 'player.getLevel()').replace('p.serverLevel()', 'p.getLevel()')
+                .replace('player.onGround()', 'player.isOnGround()')
+                .replace('Registries.DIMENSION', 'Registry.DIMENSION_REGISTRY').replace('import net.minecraft.core.registries.Registries;', 'import net.minecraft.core.Registry;')
+                .replace('BuiltInRegistries', 'Registry').replace('import net.minecraft.core.registries.Registry;', 'import net.minecraft.core.Registry;')
+                .replace('net.minecraft.core.registries.Registry', 'net.minecraft.core.Registry')
+                .replace('net.minecraft.core.RegistryAccess registries, ', '')
+                .replace('Lnet/minecraft/core/RegistryAccess;', '')
+                .replace(', FlightBlock.INSTANCE.server.registryAccess()', '')
+                .replace('TransientCraftingContainer', 'CraftingContainer')
+                .replace('org.joml.Vector3f', 'com.mojang.math.Vector3f')
+                .replace('BlockPos.containing(', 'new BlockPos(')
+                .replace('source.sendSuccess(() -> ', 'source.sendSuccess(')
+        }
+        if (flightblockMinecraftVersion == '1.18.2') {
+            adapted = adapted.replace('net.minecraft.network.chat.Component.literal(', 'new net.minecraft.network.chat.TextComponent(').replace('Component.literal(', 'new net.minecraft.network.chat.TextComponent(')
+                .replace('p.sendSystemMessage(', 'LegacyMessages.send(p, ').replace('player.sendSystemMessage(', 'LegacyMessages.send(player, ')
+                .replace('net.minecraftforge.event.level.ChunkEvent', 'net.minecraftforge.event.world.ChunkEvent')
+                .replace('event.getLevel()', 'event.getWorld()').replace('event.getEntity()', 'event.getPlayer()')
+            if (adapted.contains('(LivingDeathEvent event)')) adapted = adapted.replace('event.getPlayer()', 'event.getEntityLiving()')
+        }
         // These Forge/NeoForge distributions install Minecraft in official names.
         // Fabric/Quilt still require named -> intermediary remapping.
         if (project.hasProperty('flightblockOfficialRuntime') && flightblockOfficialRuntime) {
@@ -129,7 +157,7 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
 sourceSets.main.java.setSrcDirs([generatedSources])
 tasks.named('compileJava') { dependsOn prepareSources }
 tasks.matching { it.name == 'sourcesJar' }.configureEach { dependsOn prepareSources }
-if (flightblockMinecraftVersion in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4']) {
+if (flightblockMinecraftVersion in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2']) {
     tasks.named('processResources') {
         filesMatching('data/flightblock/recipe/*.json') {
             filter { String line -> line.contains('"key":') ? line.replaceAll('"([A-Z])": "([^"]+)"', '"$1": {"item": "$2"}') : line }
@@ -140,7 +168,7 @@ if (flightblockMinecraftVersion in ['1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.2
                 '  "group": "flightblock:level_' + marker.group(1) + '", "result": {"item": "minecraft:target", "count": 1}'
             }
         }
-        if (flightblockMinecraftVersion in ['1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4']) {
+        if (flightblockMinecraftVersion in ['1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2']) {
             eachFile { if (it.path.startsWith('data/flightblock/recipe/')) it.path = it.path.replace('data/flightblock/recipe/', 'data/flightblock/recipes/') }
         }
     }

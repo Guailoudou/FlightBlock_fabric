@@ -1,22 +1,27 @@
-plugins { id 'java'; id 'net.neoforged.moddev' version '2.0.148' }
-neoForge { version = findProperty('neoforge_version') ?: '21.11.45' }
+plugins { id 'java'; id 'net.neoforged.gradle.userdev' version '7.1.39' }
+
 repositories { mavenCentral() }
-dependencies { compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5' }
+dependencies {
+    implementation "net.neoforged:neoforge:${findProperty('neoforge_version') ?: '20.2.93'}"
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
+    jarJar('io.github.llamalad7:mixinextras-neoforge:[0.5.5,)') { version { prefer '0.5.5' } }
+}
 
 def sharedRoot = file('../../..')
 def sharedProperties = new Properties()
 file("${sharedRoot}/gradle.properties").withInputStream { sharedProperties.load(it) }
 version = sharedProperties.getProperty('version')
 group = 'dev.flightblock'
-def mc = findProperty('minecraft_version') ?: '1.21.11'
+def mc = findProperty('minecraft_version') ?: '1.20.2'
 base { archivesName = "flightblock-${mc}-neoforge" }
-java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
+java { toolchain.languageVersion = JavaLanguageVersion.of(17); withSourcesJar() }
 sourceSets.main.java {
     srcDir "${sharedRoot}/src/main/java"
     exclude 'dev/flightblock/platform/FabricEntrypoint.java'
     exclude 'dev/flightblock/PalFlightAccess.java'
 }
 sourceSets.main.resources {
+    srcDir '../../1.21.11/neoforge/src/main/resources'
     srcDir "${sharedRoot}/src/main/resources"
     exclude 'fabric.mod.json'
 }
@@ -25,7 +30,7 @@ processResources {
     inputs.property 'version', project.version
     inputs.property 'minecraft_version', mc
     filesMatching('flightblock.mixins.json') { filter { it.replace('JAVA_25', mc in ['1.20.4', '1.20.2'] ? 'JAVA_17' : 'JAVA_21') } }
-    if (mc == '1.20.4') eachFile { if (it.path == 'META-INF/neoforge.mods.toml') it.path = 'META-INF/mods.toml' }
+    eachFile { if (it.path == 'META-INF/neoforge.mods.toml') it.path = 'META-INF/mods.toml' }
     filesMatching('META-INF/*.toml') { expand version: project.version, minecraft_version_range: "[${mc}]" }
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = mc in ['1.20.4', '1.20.2'] ? 17 : 21 }
@@ -34,3 +39,7 @@ ext.flightblockSourceRoot = sharedRoot
 ext.flightblockOfficialRuntime = true
 ext.flightblockMinecraftVersion = mc
 apply from: new File(sharedRoot, "gradle/minecraft-1.21.11-source-compat.gradle")
+
+tasks.named('jar') { archiveClassifier = 'slim' }
+tasks.named('jarJar') { archiveClassifier = null; manifest { attributes 'MixinConfigs': 'flightblock.mixins.json' } }
+tasks.named('build') { dependsOn 'jarJar' }
