@@ -24,6 +24,9 @@ def verify(path, minecraft, loader):
             metadata = tomllib.loads(jar.read(descriptor).decode())
             assert metadata["mods"][0]["modId"] == "flightblock"
             assert "${" not in metadata["mods"][0]["version"]
+            dependencies = metadata["dependencies"]["flightblock"]
+            minecraft_dependency = next(dep for dep in dependencies if dep["modId"] == "minecraft")
+            assert minecraft_dependency["versionRange"] == f"[{minecraft}]"
             entry = "NeoForgeEntrypoint" if loader == "neoforge" else "ForgeEntrypoint"
             assert f"dev/flightblock/platform/{entry}.class" in names
             assert "fabric.mod.json" not in names

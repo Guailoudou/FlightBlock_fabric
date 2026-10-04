@@ -66,20 +66,35 @@ jobs:
   package:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           pattern: part-*
           path: release/
           merge-multiple: true
-      - name: Package all versions together
+      - name: Generate consolidated checksums
         working-directory: release
         run: |
           find . -type f -name '*.jar' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
-          zip -r "../FlightBlock-all-versions-${{ github.run_number }}.zip" .
       - uses: actions/upload-artifact@v4
         with:
           name: FlightBlock-all-versions-${{ github.run_number }}
-          path: FlightBlock-all-versions-*.zip
+          path: release/
           if-no-files-found: error
           retention-days: 30
+      - name: Remove temporary per-target artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner: context.repo.owner, repo: context.repo.repo, run_id: context.runId
+            });
+            for (const artifact of artifacts.filter(a => a.name.startsWith('part-'))) {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner, repo: context.repo.repo, artifact_id: artifact.id
+              });
+            }

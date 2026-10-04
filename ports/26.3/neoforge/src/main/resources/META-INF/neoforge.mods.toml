@@ -10,7 +10,7 @@ description="Tiered timed flight target blocks"
 modId="minecraft"
 type="required"
 mandatory=true
-versionRange="[26.3,26.4)"
+versionRange="${minecraft_version_range}"
 ordering="NONE"
 side="BOTH"
 [[mixins]]

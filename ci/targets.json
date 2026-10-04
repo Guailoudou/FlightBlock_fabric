@@ -115,5 +115,85 @@
       "fabric_api_version": "0.161.0+26.3",
       "target_loader": "quilt"
     }
+  },
+  {
+    "minecraft": "26.1",
+    "loader": "forge",
+    "project": "ports/26.3/forge",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1",
+      "forge_version": "62.0.9"
+    }
+  },
+  {
+    "minecraft": "26.1",
+    "loader": "neoforge",
+    "project": "ports/26.3/neoforge",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1",
+      "neoforge_version": "26.1.0.19-beta"
+    }
+  },
+  {
+    "minecraft": "26.1.1",
+    "loader": "forge",
+    "project": "ports/26.3/forge",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1.1",
+      "forge_version": "63.0.2"
+    }
+  },
+  {
+    "minecraft": "26.1.1",
+    "loader": "neoforge",
+    "project": "ports/26.3/neoforge",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1.1",
+      "neoforge_version": "26.1.1.15-beta"
+    }
+  },
+  {
+    "minecraft": "26.1.2",
+    "loader": "forge",
+    "project": "ports/26.3/forge",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1.2",
+      "forge_version": "64.1.3"
+    }
+  },
+  {
+    "minecraft": "26.1.2",
+    "loader": "neoforge",
+    "project": "ports/26.3/neoforge",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1.2",
+      "neoforge_version": "26.1.2.114"
+    }
+  },
+  {
+    "minecraft": "26.2",
+    "loader": "forge",
+    "project": "ports/26.3/forge",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.2",
+      "forge_version": "65.1.3"
+    }
+  },
+  {
+    "minecraft": "26.2",
+    "loader": "neoforge",
+    "project": "ports/26.3/neoforge",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.2",
+      "neoforge_version": "26.2.0.88"
+    }
   }
 ]

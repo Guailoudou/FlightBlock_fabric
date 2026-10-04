@@ -1,0 +1,19 @@
+// Earlier 26.x versions use the same gameplay APIs, with names/signatures changed later.
+// Generate a compile-time variant instead of probing Minecraft classes at runtime.
+if (flightblockMinecraftVersion in ['26.1', '26.1.1', '26.1.2', '26.2']) {
+    def versionSources = layout.buildDirectory.dir('version-sources')
+    def prepareSources = tasks.register('prepareVersionSources', Sync) {
+        from new File(flightblockSourceRoot, "src/main/java")
+        into versionSources
+        filteringCharset = 'UTF-8'
+        filter { String line ->
+            def adapted = line.replace('Recipe.DIRECT_CODEC', 'Recipe.CODEC')
+                .replace('p.drop(stack, false, net.minecraft.util.Prediction.PREDICTED)', 'p.drop(stack, false)')
+            flightblockMinecraftVersion == '26.2' ? adapted : adapted.replace('EntityTypes.BLOCK_DISPLAY', 'EntityType.BLOCK_DISPLAY')
+        }
+    }
+    sourceSets.main.java.setSrcDirs(projectDir == flightblockSourceRoot ? [versionSources] : [versionSources, file('src/main/java')])
+    tasks.named('compileJava') { dependsOn prepareSources }
+    tasks.matching { it.name == 'sourcesJar' }.configureEach { dependsOn prepareSources }
+}
+
