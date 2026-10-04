@@ -7,5 +7,5 @@
   "environment": "*",
   "entrypoints": {"main": ["dev.flightblock.platform.FabricEntrypoint"]},
   "mixins": ["flightblock.mixins.json"],
-  "depends": {"fabricloader": ">=0.19.5", "minecraft": "26.3", "java": ">=25", "fabric-api": ">=0.161.0+26.3", "playerabilitylib": ">=1.16.0"}
+  "depends": {"fabricloader": ">=${loader_version}", "minecraft": "${minecraft_version}", "java": ">=25", "fabric-api": ">=${fabric_api_version}", "playerabilitylib": ">=1.16.0"}
 }

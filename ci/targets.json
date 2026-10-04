@@ -1,5 +1,119 @@
 [
-  {"minecraft": "26.3", "loader": "fabric", "project": ".", "java": "25"},
-  {"minecraft": "26.3", "loader": "forge", "project": "ports/26.3/forge", "java": "25"},
-  {"minecraft": "26.3", "loader": "neoforge", "project": "ports/26.3/neoforge", "java": "25"}
+  {
+    "minecraft": "26.3",
+    "loader": "fabric",
+    "project": ".",
+    "java": "25"
+  },
+  {
+    "minecraft": "26.3",
+    "loader": "forge",
+    "project": "ports/26.3/forge",
+    "java": "25"
+  },
+  {
+    "minecraft": "26.3",
+    "loader": "neoforge",
+    "project": "ports/26.3/neoforge",
+    "java": "25"
+  },
+  {
+    "minecraft": "26.1",
+    "loader": "fabric",
+    "project": ".",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1",
+      "fabric_api_version": "0.145.1+26.1",
+      "target_loader": "fabric"
+    }
+  },
+  {
+    "minecraft": "26.1",
+    "loader": "quilt",
+    "project": ".",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1",
+      "fabric_api_version": "0.145.1+26.1",
+      "target_loader": "quilt"
+    }
+  },
+  {
+    "minecraft": "26.1.1",
+    "loader": "fabric",
+    "project": ".",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1.1",
+      "fabric_api_version": "0.145.4+26.1.1",
+      "target_loader": "fabric"
+    }
+  },
+  {
+    "minecraft": "26.1.1",
+    "loader": "quilt",
+    "project": ".",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1.1",
+      "fabric_api_version": "0.145.4+26.1.1",
+      "target_loader": "quilt"
+    }
+  },
+  {
+    "minecraft": "26.1.2",
+    "loader": "fabric",
+    "project": ".",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1.2",
+      "fabric_api_version": "0.155.3+26.1.2",
+      "target_loader": "fabric"
+    }
+  },
+  {
+    "minecraft": "26.1.2",
+    "loader": "quilt",
+    "project": ".",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.1.2",
+      "fabric_api_version": "0.155.3+26.1.2",
+      "target_loader": "quilt"
+    }
+  },
+  {
+    "minecraft": "26.2",
+    "loader": "fabric",
+    "project": ".",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.2",
+      "fabric_api_version": "0.161.0+26.2",
+      "target_loader": "fabric"
+    }
+  },
+  {
+    "minecraft": "26.2",
+    "loader": "quilt",
+    "project": ".",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.2",
+      "fabric_api_version": "0.161.0+26.2",
+      "target_loader": "quilt"
+    }
+  },
+  {
+    "minecraft": "26.3",
+    "loader": "quilt",
+    "project": ".",
+    "java": "25",
+    "properties": {
+      "minecraft_version": "26.3",
+      "fabric_api_version": "0.161.0+26.3",
+      "target_loader": "quilt"
+    }
+  }
 ]

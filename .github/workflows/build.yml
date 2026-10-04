@@ -41,9 +41,11 @@ jobs:
       - name: Build selected version and loader
         env:
           PROJECT: ${{ matrix.target.project }}
+          TARGET: ${{ toJson(matrix.target) }}
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon --project-dir "$PROJECT" clean build
+          mapfile -t properties < <(jq -r '.properties // {} | to_entries[] | "-P\(.key)=\(.value)"' <<< "$TARGET")
+          ./gradlew --no-daemon --project-dir "$PROJECT" "${properties[@]}" clean build
       - name: Stage installable JARs
         env:
           PROJECT: ${{ matrix.target.project }}
@@ -53,6 +55,7 @@ jobs:
           mkdir -p "dist/$MC"
           find "$PROJECT/build/libs" -maxdepth 1 -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' -exec cp {} "dist/$MC/" \;
           test -n "$(find "dist/$MC" -name "*-$LOADER-*.jar" -print -quit)"
+          python ci/verify_artifact.py "dist/$MC" "$MC" "$LOADER"
       - uses: actions/upload-artifact@v4
         with:
           name: part-${{ matrix.target.minecraft }}-${{ matrix.target.loader }}

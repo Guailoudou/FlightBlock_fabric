@@ -7,8 +7,10 @@
 ## 当前阶段
 
 - 26.3：已拆出加载器无关的生命周期、交互和指令逻辑；Fabric 保留内嵌 PAL。
-- 26.3 Forge / NeoForge：已有独立事件入口及构建项目，正在通过 GitHub Actions 验证。尚未确认编译通过或运行兼容。
-- Quilt 和旧版 Minecraft：仍待移植及验证，当前不能使用 26.3 JAR 替代。
+- 26.3 NeoForge：第一批 GitHub Actions 编译成功；未进行游戏运行验证。
+- 26.3 Forge：已有独立事件入口及构建项目，第一批 GitHub Actions 仍在构建。
+- 26.x Fabric / Quilt：已加入按版本选择依赖的构建矩阵，仍待各组合的 Action 编译验证。Quilt 使用其 Fabric 兼容接口及内嵌 PAL，构建依赖 Quilt Loader 0.31.0-beta.4（提供 Fabric Loader 0.19.5 兼容接口）。
+- 1.x Minecraft：仍待移植及验证，当前不能使用 26.3 JAR 替代。
 - Forge / NeoForge 使用独立权限适配，不能加载 Fabric 版 PAL。支持本 Mod 自身授权的清理及存档隔离；与其他直接修改能力的 Mod 的兼容性需要实际验收。
 
 ## 构建与交付
