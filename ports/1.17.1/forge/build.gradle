@@ -1,8 +1,8 @@
-plugins { id 'java'; id 'net.minecraftforge.gradle' version '7.0.40'; id 'net.minecraftforge.jarjar' version '0.2.3'; id 'net.minecraftforge.renamer' version '1.1.5' }
-minecraft { mappings channel: 'official', version: findProperty('minecraft_version') ?: '1.21.4' }
+plugins { id 'java'; id 'net.minecraftforge.gradle' version '7.0.40'; id 'com.gradleup.shadow' version '9.6.1'; id 'net.minecraftforge.renamer' version '1.1.5' }
+minecraft { mappings channel: 'official', version: findProperty('minecraft_version') ?: '1.17.1' }
 repositories { minecraft.mavenizer(it); maven fg.forgeMaven; maven fg.minecraftLibsMaven; mavenCentral() }
 dependencies {
-    implementation minecraft.dependency("${findProperty('forge_group') ?: 'net.minecraftforge'}:forge:${findProperty('minecraft_version') ?: '1.21.4'}-${findProperty('forge_version') ?: '54.1.18'}")
+    implementation minecraft.dependency("${findProperty('forge_group') ?: 'net.minecraftforge'}:forge:${findProperty('minecraft_version') ?: '1.17.1'}-${findProperty('forge_version') ?: '37.1.1'}")
     compileOnly 'io.github.llamalad7:mixinextras-common:0.5.5'
     annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
 }
@@ -13,22 +13,22 @@ def sharedProperties = new Properties()
 file("${sharedRoot}/gradle.properties").withInputStream { sharedProperties.load(it) }
 version = sharedProperties.getProperty('version')
 group = 'dev.flightblock'
-def mc = findProperty('minecraft_version') ?: '1.21.4'
-if (mc in ['1.21.8', '1.21.4', '1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1']) {
-    // These Forge releases do not ship MixinExtras, which our WrapMethod hooks need.
-    jarJar.register()
-    dependencies { jarJar 'io.github.llamalad7:mixinextras-forge:0.5.5' }
-    tasks.named('jar') { archiveClassifier = 'slim' }
-    tasks.named('jarJar') { archiveClassifier = null }
-    tasks.named('build') { dependsOn 'jarJar' }
+def mc = findProperty('minecraft_version') ?: '1.17.1'
+configurations { shadowExtras }
+dependencies { shadowExtras('io.github.llamalad7:mixinextras-common:0.5.5') { transitive = false } }
+tasks.named('jar') { archiveClassifier = 'slim' }
+tasks.named('shadowJar') {
+    configurations = [project.configurations.shadowExtras]
+    archiveClassifier = 'dev'
+    relocate 'com.llamalad7.mixinextras', 'dev.flightblock.internal.mixinextras'
+    mergeServiceFiles()
 }
 base { archivesName = "flightblock-${mc}-${findProperty('target_loader') ?: 'forge'}" }
 if (mc in ['1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1']) {
     // Forge through 1.20.4 uses SRG names in production, including Mixin references.
     renamer.mappings(minecraft.dependency.toSrg)
-    renamer.enableMixinRefmaps { config 'flightblock.mixins.json'; jar tasks.named('jarJar', Jar) }
-    tasks.named('jarJar') { archiveClassifier = 'dev' }
-    renamer.classes(tasks.named('jarJar', Jar)) {
+    renamer.enableMixinRefmaps { config 'flightblock.mixins.json'; jar tasks.named('shadowJar', Jar) }
+    renamer.classes(tasks.named('shadowJar', Jar)) {
         archiveClassifier = null
         mappings renamer.mixin.generatedMappings
     }
@@ -40,6 +40,7 @@ sourceSets.main.java {
     exclude 'dev/flightblock/PalFlightAccess.java'
 }
 sourceSets.main.resources {
+    srcDir '../../1.21.4/forge/src/main/resources'
     srcDir "${sharedRoot}/src/main/resources"
     exclude 'fabric.mod.json'
 }

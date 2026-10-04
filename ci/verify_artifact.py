@@ -39,6 +39,10 @@ def verify(path, minecraft, loader):
                 assert b"MixinConfigs: flightblock.mixins.json" in jar.read("META-INF/MANIFEST.MF")
             if loader == "forge" or legacy_neo:
                 assert b"MixinConfigs: flightblock.mixins.json" in jar.read("META-INF/MANIFEST.MF")
+                if minecraft in ("1.17.1", "1.16.5"):
+                    assert config["plugin"] == "dev.flightblock.LegacyMixinPlugin"
+                    assert "dev/flightblock/LegacyMixinPlugin.class" in names
+                    assert "dev/flightblock/internal/mixinextras/MixinExtrasBootstrap.class" in names
                 if minecraft in ("1.21.8", "1.21.4", "1.21.1", "1.20.6", "1.20.4", "1.20.2", "1.20.1", "1.19.4", "1.19.2", "1.18.2"):
                     nested = json.loads(jar.read("META-INF/jarjar/metadata.json"))["jars"]
                     assert any("mixinextras" in dep["identifier"]["artifact"] and dep["path"] in names for dep in nested)
