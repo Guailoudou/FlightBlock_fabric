@@ -26,7 +26,12 @@ public final class ForgeEntrypoint {
         RegisterCommandsEvent.BUS.addListener(event -> mod.registerCommands(event.getDispatcher()));
         ChunkEvent.Load.BUS.addListener(event -> { if (event.getLevel() instanceof ServerLevel level) mod.chunkLoaded(level, event.getChunk()); });
         ChunkEvent.Unload.BUS.addListener(event -> { if (event.getLevel() instanceof ServerLevel level) mod.chunkUnloaded(level, event.getChunk()); });
-        PlayerInteractEvent.RightClickBlock.BUS.addListener(event -> { var result = mod.useBlock(event.getEntity(), event.getLevel(), event.getHand(), event.getPos()); if (result != InteractionResult.PASS) { event.setCancellationResult(result); event.setCanceled(true); } });
+        PlayerInteractEvent.RightClickBlock.BUS.addListener(event -> {
+            var result = mod.useBlock(event.getEntity(), event.getLevel(), event.getHand(), event.getPos());
+            if (result == InteractionResult.PASS) return false;
+            event.setCancellationResult(result);
+            return true;
+        });
         PlayerEvent.PlayerLoggedInEvent.BUS.addListener(event -> { if (event.getEntity() instanceof ServerPlayer player) mod.refresh(player); });
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(event -> { if (event.getEntity() instanceof ServerPlayer player) mod.flight.clear(player, false); });
         PlayerEvent.PlayerRespawnEvent.BUS.addListener(event -> { if (event.getEntity() instanceof ServerPlayer player) { mod.flight.clear(player, false); mod.refresh(player); } });
