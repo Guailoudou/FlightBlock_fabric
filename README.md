@@ -1,10 +1,12 @@
 # FlightBlock
 
-适用于 Minecraft Java Edition 26.3 / Fabric 的限时飞行方块 Mod。合成飞行标靶、放置并右键激活后，即可在指定范围内飞行。
+Minecraft Java Edition 的限时飞行标靶 Mod。合成飞行标靶、放置并右键激活后，即可在指定范围内飞行。
+
+正在适配常用 Minecraft 版本及 Fabric、Quilt、Forge、NeoForge。26.1、26.1.1、26.1.2、26.2、26.3 的四种加载器已全部通过 Actions 编译和产物检查；旧版适配状态见 [移植进度](docs/version-porting.md)。各版本分别构建，请选择与游戏版本、加载器一致的 JAR。
 
 支持单人世界和专用服务器。专用服务器安装后，玩家可以使用原版客户端连接。
 
-飞行权限通过 [Player Ability Lib（PAL）](https://github.com/Ladysnake/PlayerAbilityLib) 管理，仅撤销 FlightBlock 自己的授权，兼容其他使用 PAL 的飞行功能。安装包内嵌 PAL，无需单独下载。
+Fabric / Quilt 的飞行权限通过 [Player Ability Lib（PAL）](https://github.com/Ladysnake/PlayerAbilityLib) 管理，仅撤销 FlightBlock 自己的授权，兼容其他使用 PAL 的飞行功能。安装包内嵌 PAL，无需单独下载。Forge / NeoForge 使用独立权限适配，不使用 Fabric 版 PAL。
 
 ## 功能
 
@@ -31,8 +33,8 @@
 
 1. 打开 **Actions → Build FlightBlock**。
 2. 选择一次成功的运行。
-3. 在 **Artifacts** 中下载 `flightblock-<运行编号>` 并解压。
-4. 取出 `flightblock-<版本>.jar`，作为安装包使用。
+3. 在 **Artifacts** 中下载 `FlightBlock-all-versions-<运行编号>` 并解压。
+4. 打开对应 Minecraft 版本的目录，选择 `flightblock-<Minecraft版本>-<加载器>-<Mod版本>.jar`。
 
 下载产物包含安装 JAR 和对应的 `SHA256SUMS` 校验文件，保留 30 天。下载时需要登录 GitHub。`-sources.jar` 是源码包，不用于安装。
 
@@ -40,7 +42,7 @@
 
 ## 安装
 
-本项目的构建环境：
+默认 26.3 Fabric 构建的依赖如下；完整构建组合和各版本依赖见 [构建矩阵](ci/targets.json)。26.x 使用 Java 25，1.21.x 使用 Java 21 运行。
 
 | 依赖 | 版本 |
 | --- | --- |
@@ -51,15 +53,15 @@
 
 ### 单人世界
 
-1. 安装对应版本的 Fabric 游戏实例。
-2. 关闭游戏，将 FlightBlock 安装 JAR 和 Fabric API 放入该实例的 `mods` 目录。
+1. 安装对应版本和加载器的游戏实例。
+2. 关闭游戏，将对应 FlightBlock JAR 放入该实例的 `mods` 目录。Fabric / Quilt 另需对应版本的 Fabric API；Forge / NeoForge 无需 Fabric API。
 3. 启动游戏并进入世界。
 
 升级时请移除旧版 FlightBlock JAR，避免同时加载多个版本。使用隔离实例的启动器时，以该实例目录为准。
 
 ### 专用服务器
 
-将 FlightBlock 安装 JAR 和 Fabric API 放入 Fabric 服务器的 `mods` 目录，然后启动服务器。客户端无需安装 FlightBlock 或专用资源包，可使用相同 Minecraft 版本的原版客户端连接。
+将对应版本、加载器的 FlightBlock JAR 放入服务器的 `mods` 目录；Fabric / Quilt 同时安装对应 Fabric API。客户端无需安装 FlightBlock 或专用资源包，可使用相同 Minecraft 版本的原版客户端连接。
 
 ## 使用
 

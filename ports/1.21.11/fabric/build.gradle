@@ -36,9 +36,28 @@ def prepareTests = tasks.register('prepareVersionTests', Sync) {
     from "${sharedRoot}/src/test/java"
     into layout.buildDirectory.dir('version-tests')
     filteringCharset = 'UTF-8'
-    filter { it.replace('RecipeMarkerCheck.run()', 'RecipeMarkerCheck21.run()') }
+    filter { String line ->
+        def adapted = line.replace('RecipeMarkerCheck.run()', 'RecipeMarkerCheck21.run()')
+        if (mc in ['1.21.1', '1.20.6']) adapted = adapted.replace('RecipeMarkerCheck21.run()', 'RecipeMarkerCheck21.run(); LegacyJson.main(new String[0])')
+        if (mc in ['1.21.4', '1.21.1', '1.20.6']) {
+            adapted = adapted.replace('import net.minecraft.world.level.storage.TagValueOutput;', '')
+                .replace('var output = TagValueOutput.createWithoutContext(ProblemReporter.DISCARDING)', 'var output = new net.minecraft.nbt.CompoundTag()')
+                .replace('output.buildResult().getListOrEmpty("ability_sources")', 'output.getList("ability_sources", 8)')
+        }
+        adapted
+    }
 }
 tasks.named('compileTestJava') { dependsOn prepareTests }
+if (mc == '1.20.6') {
+    def prepareLocalTests = tasks.register('prepareLegacyRecipeCheck', Sync) {
+        from 'src/test/java'
+        into layout.buildDirectory.dir('local-version-tests')
+        filteringCharset = 'UTF-8'
+        filter { it.replace('/data/flightblock/recipe/', '/data/flightblock/recipes/') }
+    }
+    sourceSets.test.java.setSrcDirs([layout.buildDirectory.dir('version-tests'), layout.buildDirectory.dir('local-version-tests')])
+    tasks.named('compileTestJava') { dependsOn prepareLocalTests }
+}
 loom {
     mixin { useLegacyMixinAp = true; defaultRefmapName = 'flightblock.refmap.json' }
 }

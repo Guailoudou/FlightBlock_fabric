@@ -9,7 +9,9 @@
 - 26.3：已拆出加载器无关的生命周期、交互和指令逻辑；Fabric 保留内嵌 PAL。
 - 26.1、26.1.1、26.1.2、26.2、26.3：Fabric、Quilt、Forge、NeoForge 全部通过 GitHub Actions 编译和产物检查，共 20 个组合，记录见 [构建运行](https://github.com/Guailoudou/FlightBlock_fabric/actions/runs/37225547987)。
 - Quilt 使用 Fabric 兼容接口及内嵌 PAL，构建依赖 Quilt Loader 0.31.0-beta.4（提供 Fabric Loader 0.19.5 兼容接口）。
-- 1.21.11：四种加载器已加入构建矩阵，正在修复和验证，尚不能作为可用版本发布。
+- 1.21.11：四种加载器均已有成功编译及产物检查记录，见 [构建运行](https://github.com/Guailoudou/FlightBlock_fabric/actions/runs/37226328135) 的各任务。该运行因 1.21.8 Forge 失败而未发布合集。
+- 1.21.8：Fabric、Quilt、NeoForge 编译成功；Forge tick 事件适配及 MixinExtras 内嵌正在验证。
+- 1.21.4、1.21.1：四种加载器已加入矩阵，正在根据 Actions 日志适配。
 - 其余 1.x Minecraft：仍待移植及验证，当前不能使用 26.3 JAR 替代。
 - Forge / NeoForge 使用独立权限适配，不能加载 Fabric 版 PAL。支持本 Mod 自身授权的清理及存档隔离；与其他直接修改能力的 Mod 的兼容性需要实际验收。
 
