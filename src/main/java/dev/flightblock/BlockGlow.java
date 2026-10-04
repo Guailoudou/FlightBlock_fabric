@@ -2,6 +2,7 @@ package dev.flightblock;
 
 import com.mojang.math.Transformation;
 import net.minecraft.nbt.*;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.*;
@@ -33,7 +34,7 @@ public final class BlockGlow {
             super(EntityTypes.BLOCK_DISPLAY, level);
             CompoundTag data = new CompoundTag();
             data.put("block_state", NbtUtils.writeBlockState(Blocks.TARGET.defaultBlockState()));
-            data.putInt("glow_color_override", 0x55FFFF);
+            data.putInt("glow_color_override", TextColor.fromLegacyFormat(FlightItems.levelColor(anchor.level())).getValue());
             CompoundTag brightness = new CompoundTag();
             brightness.putInt("block", 15);
             brightness.putInt("sky", 15);

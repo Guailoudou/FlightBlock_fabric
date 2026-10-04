@@ -7,6 +7,7 @@ public final class FlightBindings {
     private final Map<UUID, Set<String>> byPlayer = new HashMap<>();
     private final Map<String, UUID> owners = new HashMap<>();
     public Set<String> get(UUID player) { return Set.copyOf(byPlayer.getOrDefault(player, Set.of())); }
+    public UUID owner(String id) { return owners.get(id); }
     public boolean bind(UUID player, String id) {
         UUID owner = owners.get(id);
         if (owner != null && !owner.equals(player)) return false;

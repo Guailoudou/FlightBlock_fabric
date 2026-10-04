@@ -13,6 +13,8 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.ChatFormatting;
 import net.minecraft.resources.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.*;
@@ -94,7 +96,8 @@ public final class FlightBlock implements ModInitializer {
             if (hand != InteractionHand.MAIN_HAND) return InteractionResult.SUCCESS;
             if (p.isShiftKeyDown()) {
                 boolean removed = flight.unbind(p, a.id());
-                p.sendSystemMessage(Component.literal(removed ? "已解除你对该飞行方块的绑定，并释放占用。" : "你没有绑定该飞行方块。"));
+                p.sendSystemMessage(notice(removed ? "已解除你对该飞行方块的绑定，并释放占用。" : "你没有绑定该飞行方块。",
+                    removed ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
                 return InteractionResult.SUCCESS;
             }
             reconcile(p.level(), a);
@@ -107,10 +110,19 @@ public final class FlightBlock implements ModInitializer {
             }
             glow.ensure(p.level(), a, clock.millis());
             if (!flight.bind(p, a.id())) {
-                p.sendSystemMessage(Component.literal("该飞行方块正被其他玩家使用，最多同时供一名玩家使用；请等待对方解绑或离线。"));
+                UUID owner = flight.owner(a.id());
+                ServerPlayer occupant = owner == null ? null : server.getPlayerList().getPlayer(owner);
+                String name = occupant != null ? occupant.getName().getString() : owner != null ? owner.toString() : "其他玩家";
+                p.sendSystemMessage(notice("该飞行方块正由 ", ChatFormatting.GRAY)
+                    .append(Component.literal(name).withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                    .append(Component.literal(" 使用，剩余 ").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal(remaining(a) + " 秒").withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal("；最多同时供一名玩家使用，请等待对方解绑或离线。").withStyle(ChatFormatting.YELLOW)));
                 return InteractionResult.SUCCESS;
             }
-            p.sendSystemMessage(Component.literal("飞行方块 " + a.level() + " 级：半径 " + config.radius(a.level()) + " 格，剩余 " + remaining(a) + " 秒；双击跳跃起飞。"));
+            p.sendSystemMessage(notice("飞行方块 " + a.level() + " 级：", ChatFormatting.GREEN)
+                .append(Component.literal("半径 " + config.radius(a.level()) + " 格，剩余 " + remaining(a) + " 秒").withStyle(ChatFormatting.GOLD))
+                .append(Component.literal("；双击跳跃起飞。").withStyle(ChatFormatting.GREEN)));
             return InteractionResult.SUCCESS;
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, s) -> refresh(handler.player));
@@ -132,11 +144,15 @@ public final class FlightBlock implements ModInitializer {
                 .then(Commands.literal("status").executes(c -> status(c.getSource())))
                 .then(Commands.literal("off").executes(c -> {
                     ServerPlayer p = c.getSource().getPlayer();
-                    if (p == null) { c.getSource().sendFailure(Component.literal("请由玩家执行 /flightblock off")); return 0; }
+                    if (p == null) { c.getSource().sendFailure(notice("请由玩家执行 /flightblock off", ChatFormatting.RED)); return 0; }
                     flight.clear(p, true);
-                    p.sendSystemMessage(Component.literal("已清空你的飞行方块绑定。")); return 1;
+                    p.sendSystemMessage(notice("已清空你的飞行方块绑定。", ChatFormatting.GREEN)); return 1;
                 }))));
         if (Boolean.getBoolean("flightblock.verify")) RuntimeChecks.checkMixinTargets();
+    }
+    private static MutableComponent notice(String text, ChatFormatting color) {
+        return Component.literal("[FlightBlock] ").withStyle(ChatFormatting.DARK_AQUA)
+            .append(Component.literal(text).withStyle(color));
     }
     static void drainPending(Queue<Runnable> tasks) {
         // Work triggered by this batch waits for the next tick, too.
@@ -165,7 +181,7 @@ public final class FlightBlock implements ModInitializer {
             : item.activated() && state.byId.containsKey(item.id().toString()) ? "同一实例已在其他位置放置。" : null;
         if (reason != null) {
             if (item != null && item.expired(clock.millis())) stack.shrink(1);
-            if (player != null) player.sendSystemMessage(Component.literal(reason));
+            if (player != null) player.sendSystemMessage(notice(reason, ChatFormatting.RED));
             return false;
         }
         return true;
@@ -213,13 +229,13 @@ public final class FlightBlock implements ModInitializer {
             Config next = Config.read(configPath);
             config = next;
             for (ServerPlayer p : source.getServer().getPlayerList().getPlayers()) { refresh(p); flight.check(p); }
-            source.sendSuccess(() -> Component.literal("已重载：三级时长 " + next.first() + "/" + next.second() + "/" + next.third()
+            source.sendSuccess(() -> notice("已重载：三级时长 " + next.first() + "/" + next.second() + "/" + next.third()
                 + " 秒，三级半径 " + next.firstRadius() + "/" + next.secondRadius() + "/" + next.thirdRadius()
-                + " 格，检查周期 " + next.interval() + " tick；范围立即更新，已激活方块到期时间保持不变。"), true);
+                + " 格，检查周期 " + next.interval() + " tick；范围立即更新，已激活方块到期时间保持不变。", ChatFormatting.GREEN), true);
             return 1;
         } catch (Exception e) {
             LOG.error("flightblock reload 失败，保留整份旧配置：{}", e.getMessage());
-            source.sendFailure(Component.literal(e.getMessage())); return 0;
+            source.sendFailure(notice(e.getMessage(), ChatFormatting.RED)); return 0;
         }
     }
     private int give(CommandSourceStack source, Collection<ServerPlayer> players, int level, int count) {
@@ -231,23 +247,29 @@ public final class FlightBlock implements ModInitializer {
             if (!stack.isEmpty()) {
                 var entity = p.drop(stack, false, net.minecraft.util.Prediction.PREDICTED);
                 if (entity != null) { entity.setNoPickUpDelay(); entity.setTarget(p.getUUID()); }
-                p.sendSystemMessage(Component.literal("背包空间不足，" + dropped + " 件飞行方块掉落在脚下。"));
+                p.sendSystemMessage(notice("背包空间不足，" + dropped + " 件飞行方块掉落在脚下。", ChatFormatting.YELLOW));
             }
             p.containerMenu.broadcastChanges();
             LOG.info("管理员 {} 向 {} 发放 {} 级飞行方块 {} 件（入包 {}，掉落 {}）", source.getTextName(), p.getName().getString(), level, count, count - dropped, dropped);
-            source.sendSuccess(() -> Component.literal("已向 " + p.getName().getString() + " 发放 " + level + " 级飞行方块 " + count + " 件。"), true);
+            source.sendSuccess(() -> notice("已向 ", ChatFormatting.GREEN)
+                .append(Component.literal(p.getName().getString()).withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                .append(Component.literal(" 发放 " + level + " 级飞行方块 " + count + " 件。").withStyle(ChatFormatting.GREEN)), true);
         }
         return players.size();
     }
     private int status(CommandSourceStack source) {
         ServerPlayer p = source.getPlayer();
-        if (p == null) { source.sendFailure(Component.literal("请由玩家执行 /flightblock status；控制台可用 give/reload。")); return 0; }
+        if (p == null) { source.sendFailure(notice("请由玩家执行 /flightblock status；控制台可用 give/reload。", ChatFormatting.RED)); return 0; }
         Set<String> ids = flight.bindings(p);
-        if (ids.isEmpty()) { p.sendSystemMessage(Component.literal("没有绑定飞行方块，请先右键已放置的飞行方块。")); return 1; }
+        if (ids.isEmpty()) { p.sendSystemMessage(notice("没有绑定飞行方块，请先右键已放置的飞行方块。", ChatFormatting.YELLOW)); return 1; }
         for (String id : ids) {
             WorldState.Anchor a = state.byId.get(id);
-            if (a != null) p.sendSystemMessage(Component.literal(a.dimension() + " " + a.pos().toShortString() + "；" + a.level()
-                + " 级；半径 " + config.radius(a.level()) + " 格；剩余 " + remaining(a) + " 秒；范围内：" + (a.valid(clock.millis()) && a.contains(dimension(p.level()), p.getX(), p.getY(), p.getZ(), config.radius(a.level())))));
+            if (a != null) {
+                boolean inside = a.valid(clock.millis()) && a.contains(dimension(p.level()), p.getX(), p.getY(), p.getZ(), config.radius(a.level()));
+                p.sendSystemMessage(notice(a.dimension() + " " + a.pos().toShortString() + "；" + a.level() + " 级；", ChatFormatting.GRAY)
+                    .append(Component.literal("半径 " + config.radius(a.level()) + " 格；剩余 " + remaining(a) + " 秒；").withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal("范围内：" + (inside ? "是" : "否")).withStyle(inside ? ChatFormatting.GREEN : ChatFormatting.RED)));
+            }
         }
         return 1;
     }

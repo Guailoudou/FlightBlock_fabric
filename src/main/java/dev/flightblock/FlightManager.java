@@ -15,6 +15,7 @@ public final class FlightManager {
     public Set<String> bindings(ServerPlayer player) {
         return bindings.get(player.getUUID());
     }
+    public UUID owner(String id) { return bindings.owner(id); }
     public boolean bind(ServerPlayer player, String id) {
         if (!bindings.bind(player.getUUID(), id)) return false;
         check(player);

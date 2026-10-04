@@ -50,9 +50,13 @@ public final class FlightItems {
         Rules.ItemState state = read(stack);
         if (state != null) decorate(stack, state, config);
     }
+    public static ChatFormatting levelColor(int level) {
+        return switch (level) { case 1 -> ChatFormatting.GOLD; case 2 -> ChatFormatting.AQUA;
+            case 3 -> ChatFormatting.LIGHT_PURPLE; default -> throw new IllegalArgumentException("level"); };
+    }
     private static void decorate(ItemStack stack, Rules.ItemState state, Config config) {
         String roman = switch (state.level()) { case 1 -> "I"; case 2 -> "II"; default -> "III"; };
-        ChatFormatting color = switch (state.level()) { case 1 -> ChatFormatting.GOLD; case 2 -> ChatFormatting.AQUA; default -> ChatFormatting.LIGHT_PURPLE; };
+        ChatFormatting color = levelColor(state.level());
         stack.set(DataComponents.CUSTOM_NAME, Component.literal("飞行方块 · " + roman + " 级").withStyle(color).withStyle(s -> s.withItalic(false)));
         stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
         List<Component> lore = new ArrayList<>();
