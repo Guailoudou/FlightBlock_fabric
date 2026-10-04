@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {"D": "minecraft:diamond", "S": "minecraft:nether_star", "N": "minecraft:netherite_ingot", "T": "minecraft:target"},
+  "pattern": ["DSD", "STS", "DND"],
+  "result": {"id": "minecraft:target", "count": 1, "components": {"minecraft:custom_data": {"flightblock_recipe": 3}}}
+}

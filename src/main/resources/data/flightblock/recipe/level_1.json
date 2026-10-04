@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {"F": "minecraft:feather", "G": "minecraft:gold_ingot", "T": "minecraft:target"},
+  "pattern": ["FGF", "GTG", "FGF"],
+  "result": {"id": "minecraft:target", "count": 1, "components": {"minecraft:custom_data": {"flightblock_recipe": 1}}}
+}

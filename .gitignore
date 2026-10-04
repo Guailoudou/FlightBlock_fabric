@@ -1,0 +1,14 @@
+.gradle/
+.gradle-user/
+build/
+run/
+logs/
+crash-reports/
+.work/
+.idea/
+*.iml
+
+# Local development records and artifact checksums
+FlightBlock_Local_Task.txt
+VALIDATION.md
+ARTIFACTS.sha256

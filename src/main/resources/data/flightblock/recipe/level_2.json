@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {"F": "minecraft:feather", "D": "minecraft:diamond", "T": "minecraft:target"},
+  "pattern": ["FDF", "DTD", "FDF"],
+  "result": {"id": "minecraft:target", "count": 1, "components": {"minecraft:custom_data": {"flightblock_recipe": 2}}}
+}

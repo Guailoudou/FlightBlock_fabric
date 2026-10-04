@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "flightblock",
+  "version": "${version}",
+  "name": "FlightBlock",
+  "description": "限时飞行标靶，支持专用服务端和单人世界",
+  "environment": "*",
+  "entrypoints": {"main": ["dev.flightblock.FlightBlock"]},
+  "mixins": ["flightblock.mixins.json"],
+  "depends": {"fabricloader": ">=0.19.5", "minecraft": "26.3", "java": ">=25", "fabric-api": ">=0.161.0+26.3"}
+}

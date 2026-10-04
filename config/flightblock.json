@@ -1,0 +1,8 @@
+{
+  "configVersion": 1,
+  "durationsSeconds": {"1": 300, "2": 900, "3": 21600},
+  "radiiBlocks": {"1": 64, "2": 128, "3": 256},
+  "flightCheckIntervalTicks": 5,
+  "slowFallingSeconds": 10,
+  "displayTimeZone": "Asia/Shanghai"
+}

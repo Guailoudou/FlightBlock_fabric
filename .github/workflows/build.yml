@@ -1,0 +1,52 @@
+name: Build FlightBlock
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+          cache-dependency-path: |
+            build.gradle
+            settings.gradle
+            gradle.properties
+            gradle/wrapper/gradle-wrapper.properties
+
+      - name: Build and verify rules
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon clean build
+
+      - name: Generate JAR checksums
+        working-directory: build/libs
+        run: |
+          for jar in *.jar; do
+            [[ "$jar" == *-sources.jar ]] || sha256sum "$jar"
+          done > SHA256SUMS
+
+      - name: Upload installable JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: flightblock-${{ github.run_number }}
+          path: |
+            build/libs/*.jar
+            !build/libs/*-sources.jar
+            build/libs/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
