@@ -10,6 +10,13 @@ def verify(path, minecraft, loader):
     assert f"-{minecraft}-{loader}-" in path.name, path.name
     with zipfile.ZipFile(path) as jar:
         names = set(jar.namelist())
+        pack = json.loads(jar.read('pack.mcmeta'))['pack']
+        assert pack.get('description')
+        assert pack.get('pack_format') or pack.get('min_format')
+        recipe_folder = 'recipes' if minecraft in ('1.16.5', '1.17.1', '1.18.2', '1.19.2', '1.19.4', '1.20.1', '1.20.2', '1.20.4', '1.20.6') else 'recipe'
+        for tier in range(1, 4):
+            recipe = json.loads(jar.read(f'data/flightblock/{recipe_folder}/level_{tier}.json'))
+            assert recipe['type'] == 'minecraft:crafting_shaped'
         if minecraft == "1.16.5":
             for name in names:
                 if name.startswith("dev/flightblock/") and name.endswith(".class"):

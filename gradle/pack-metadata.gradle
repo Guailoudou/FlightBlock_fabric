@@ -1,0 +1,40 @@
+// Read the target game's own formats without launching Minecraft.
+def packFile = layout.buildDirectory.file('pack-metadata/pack.mcmeta')
+def generatePackMetadata = tasks.register('generatePackMetadata') {
+    inputs.files(configurations.runtimeClasspath)
+    inputs.property 'minecraft', flightblockMinecraftVersion
+    outputs.file packFile
+    doLast {
+        def version = configurations.runtimeClasspath.files.findResult { file ->
+            if (!file.name.endsWith('.jar')) return null
+            def zip = new java.util.zip.ZipFile(file)
+            try {
+                def entry = zip.getEntry('version.json')
+                if (entry == null) return null
+                def info = new groovy.json.JsonSlurper().parse(zip.getInputStream(entry))
+                info.id == flightblockMinecraftVersion && info.pack_version ? info : null
+            } finally { zip.close() }
+        }
+        if (version == null) throw new GradleException("Missing target Minecraft version.json: ${flightblockMinecraftVersion}")
+        def formats = version.pack_version
+        def pack = [description: 'FlightBlock resources']
+        if (formats.containsKey('data_major')) {
+            def data = [formats.data_major, formats.data_minor]
+            def resources = [formats.resource_major, formats.resource_minor]
+            def dataFirst = data[0] < resources[0] || data[0] == resources[0] && data[1] < resources[1]
+            pack.min_format = dataFirst ? data : resources
+            pack.max_format = dataFirst ? resources : data
+        } else {
+            pack.pack_format = formats.data
+            pack['forge:data_pack_format'] = formats.data
+            pack['forge:resource_pack_format'] = formats.resource
+        }
+        def output = packFile.get().asFile
+        output.parentFile.mkdirs()
+        output.setText(groovy.json.JsonOutput.toJson([pack: pack]) + '\n', 'UTF-8')
+    }
+}
+tasks.named('processResources') {
+    dependsOn generatePackMetadata
+    from(packFile)
+}

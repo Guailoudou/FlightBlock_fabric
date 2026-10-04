@@ -10,11 +10,12 @@ class Java8SourcesCheck(unittest.TestCase):
             'net.minecraft.world.Container': 'net.minecraft.inventory.IInventory',
             'net.minecraft.server.level.ServerPlayer': 'net.minecraft.entity.player.ServerPlayerEntity',
         }
-        source = 'import net.minecraft.world.inventory.*;\nimport net.minecraft.world.Container;\nimport net.minecraft.server.level.ServerPlayer;\nAbstractContainerMenu menu; Container input; ServerPlayer player; String descriptor = "Lnet/minecraft/server/level/ServerPlayer;";'
+        source = 'import net.minecraftforge.fml.event.server.*;\nimport net.minecraft.world.inventory.*;\nimport net.minecraft.world.Container;\nimport net.minecraft.server.level.ServerPlayer;\nAbstractContainerMenu menu; Container input; ServerPlayer player; String descriptor = "Lnet/minecraft/server/level/ServerPlayer;";'
         result = convert(source, names)
         self.assertIn('import net.minecraft.inventory.container.Container;', result)
         self.assertIn('Container menu; IInventory input; ServerPlayerEntity player;', result)
         self.assertIn('Lnet/minecraft/entity/player/ServerPlayerEntity;', result)
+        self.assertIn('import net.minecraftforge.fml.event.server.*;', result)
 
     def test_record_validation_and_value_semantics(self):
         result = backport('public record ItemState(int level, String id) { public ItemState { if (level < 1) throw new IllegalArgumentException(); } }')

@@ -41,6 +41,7 @@
   "net.minecraft.world.effect.MobEffects": "net.minecraft.potion.Effects",
   "net.minecraft.world.entity.Entity": "net.minecraft.entity.Entity",
   "net.minecraft.world.entity.EntityType": "net.minecraft.entity.EntityType",
+  "net.minecraft.world.entity.item.ItemEntity": "net.minecraft.entity.item.ItemEntity",
   "net.minecraft.world.entity.EntityType$Builder": "net.minecraft.entity.EntityType$Builder",
   "net.minecraft.world.entity.monster.Shulker": "net.minecraft.entity.monster.ShulkerEntity",
   "net.minecraft.world.entity.player.Player": "net.minecraft.entity.player.PlayerEntity",

@@ -1,4 +1,5 @@
 // Earlier 26.x versions use the same gameplay APIs, with names/signatures changed later.
+apply from: new File(flightblockSourceRoot, 'gradle/pack-metadata.gradle')
 // Generate a compile-time variant instead of probing Minecraft classes at runtime.
 if (flightblockMinecraftVersion in ['26.1', '26.1.1', '26.1.2', '26.2']) {
     def versionSources = layout.buildDirectory.dir('version-sources')

@@ -28,7 +28,7 @@ def convert(source, classes):
             simple[name.rsplit('.', 1)[1]] = classes[name].rsplit('.', 1)[1]
         return match[0]
 
-    source = re.sub(r'import (net\.minecraft[\w.*]+);', imports, source)
+    source = re.sub(r'import (net\.minecraft\.[\w.*]+);', imports, source)
     if simple:
         # Skip qualified names so a newly mapped Container is not renamed again.
         source = re.sub(r'(?<![\w.$/])(' + '|'.join(map(re.escape, simple)) + r')\b',
