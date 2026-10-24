@@ -28,6 +28,7 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
     filteringCharset = 'UTF-8'
     filter { String line ->
         def adapted = line.replace('Recipe.DIRECT_CODEC', 'Recipe.CODEC')
+            .replace('.entityTags()', '.getTags()').replace('setPermanentlyInvulnerable(', 'setInvulnerable(')
             .replace('ServerEntityLevelChangeEvents', 'ServerEntityWorldChangeEvents')
             .replace('AFTER_PLAYER_CHANGE_LEVEL', 'AFTER_PLAYER_CHANGE_WORLD')
             .replace('public abstract class ShapedRecipeMixin {', 'public abstract class ShapedRecipeMixin implements CraftingRecipe {')

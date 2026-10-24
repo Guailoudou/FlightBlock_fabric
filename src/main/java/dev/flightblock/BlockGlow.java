@@ -62,7 +62,7 @@ public final class BlockGlow {
             applyAppearance(level, data);
             setPos(anchor.pos().getX(), anchor.pos().getY(), anchor.pos().getZ());
             setGlowingTag(true);
-            setInvulnerable(true);
+            setPermanentlyInvulnerable(true);
             setNoGravity(true);
         }
         @Override public void tick() {

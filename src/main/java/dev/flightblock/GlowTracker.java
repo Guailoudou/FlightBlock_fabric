@@ -33,7 +33,7 @@ public final class GlowTracker {
     }
     public static boolean valid(FlightBlock mod, ServerLevel world, Entity entity, Map<String, ? extends Entity> active) {
         if (mod == null || mod.state == null || mod.server != world.getServer() || entity.isRemoved()) return false;
-        String id = anchorId(entity.getTags());
+        String id = anchorId(entity.entityTags());
         WorldState.Anchor anchor = mod.state.byId.get(id);
         if (active.get(id) != entity || world.getEntity(entity.getId()) != entity
             || !shouldKeep(anchor, mod.flight.owner(id) != null, mod.clock.millis(), FlightBlock.dimension(world), entity.blockPosition().asLong())) return false;
@@ -54,13 +54,13 @@ public final class GlowTracker {
         int loaded = 0, tracked = 0, stale = 0, removed = 0, unmarked = 0;
         for (ServerLevel world : mod.server.getAllLevels()) {
             Set<Entity> owned = Collections.newSetFromMap(new IdentityHashMap<Entity, Boolean>());
-            for (Entity entity : world.getAllEntities()) if (entity.getTags().contains(TAG)) {
+            for (Entity entity : world.getAllEntities()) if (entity.entityTags().contains(TAG)) {
                 loaded++;
                 owned.add(entity);
             }
             for (Object entry : ((ChunkMapAccessor)world.getChunkSource().chunkMap).flightblock$trackedEntities().values()) {
                 Entity entity = ((TrackedEntityAccessor)entry).flightblock$entity();
-                if (entity.getTags().contains(TAG)) { tracked++; owned.add(entity); }
+                if (entity.entityTags().contains(TAG)) { tracked++; owned.add(entity); }
                 else if (entity.getType().toString().contains("block_display")) unmarked++;
             }
             for (Entity entity : owned) if (!valid(mod, world, entity, active)) {

@@ -2,6 +2,8 @@ package dev.flightblock;
 
 import java.time.*;
 import java.util.UUID;
+import java.util.Set;
+import java.util.HashSet;
 
 /** Runnable without a server, EULA acceptance or third-party test frameworks. */
 public final class RulesCheck {
