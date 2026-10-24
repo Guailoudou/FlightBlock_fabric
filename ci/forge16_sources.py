@@ -35,6 +35,7 @@ def convert(source, classes):
                         lambda m: simple[m[1]], source)
     qualified = {}
     for old, new in classes.items():
+        qualified[old] = new
         qualified[old.replace('$', '.')] = new.replace('$', '.')
         qualified[old.replace('.', '/')] = new.replace('.', '/')
     pattern = '|'.join(re.escape(name) for name in sorted(qualified, key=len, reverse=True))

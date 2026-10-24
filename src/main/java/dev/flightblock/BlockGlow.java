@@ -13,6 +13,7 @@ import java.util.*;
 
 /** Temporary vanilla display entities: no world edits or entity registrations. */
 public final class BlockGlow {
+    private static final Transformation OUTLINE_TRANSFORM = new Transformation(new Vector3f(-.002f), null, new Vector3f(1.004f), null);
     private final Map<String, Glow> displays = new HashMap<>();
     public boolean isGlowing(String id) {
         Glow glow = displays.get(id);
@@ -25,21 +26,28 @@ public final class BlockGlow {
         if (!shouldGlow(anchor, bound, now)) { remove(anchor.id()); return; }
         if (level.getChunkSource().getChunkNow(anchor.pos().getX() >> 4, anchor.pos().getZ() >> 4) == null) return;
         Glow old = displays.get(anchor.id());
-        if (old != null && !old.isRemoved()) return;
+        if (old != null && GlowTracker.valid(FlightBlock.INSTANCE, level, old, displays)) return;
+        remove(anchor.id());
         Glow glow = new Glow(level, anchor);
         if (level.addFreshEntity(glow)) displays.put(anchor.id(), glow);
     }
     public void remove(String id) {
         Glow glow = displays.remove(id);
-        if (glow != null) glow.discard();
+        if (glow != null) GlowTracker.remove(glow.world, glow);
     }
     public void clear() {
-        displays.values().forEach(Entity::discard);
-        displays.clear();
+        for (String id : new ArrayList<>(displays.keySet())) remove(id);
     }
-    private static final class Glow extends Display.BlockDisplay {
+    public String audit(FlightBlock mod, boolean repair) { return GlowTracker.audit(mod, displays, repair); }
+    private final class Glow extends Display.BlockDisplay {
+        private final ServerLevel world;
+        private final String anchorId;
+        private final CompoundTag visualData;
         Glow(ServerLevel level, WorldState.Anchor anchor) {
             super(EntityTypes.BLOCK_DISPLAY, level);
+            world = level;
+            anchorId = anchor.id();
+            GlowTracker.mark(this, anchorId);
             CompoundTag data = new CompoundTag();
             data.put("block_state", NbtUtils.writeBlockState(Blocks.TARGET.defaultBlockState()));
             data.putInt("glow_color_override", TextColor.fromLegacyFormat(FlightItems.levelColor(anchor.level())).getValue());
@@ -49,11 +57,26 @@ public final class BlockGlow {
             data.put("brightness", brightness);
             // Slightly larger than the real block, avoiding overlapping surfaces.
             data.put("transformation", Transformation.CODEC.encodeStart(NbtOps.INSTANCE,
-                new Transformation(new Vector3f(-.002f), null, new Vector3f(1.004f), null)).getOrThrow());
-            readAdditionalSaveData(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), data));
+                OUTLINE_TRANSFORM).getOrThrow());
+            visualData = data;
+            applyAppearance(level, data);
             setPos(anchor.pos().getX(), anchor.pos().getY(), anchor.pos().getZ());
             setGlowingTag(true);
+            setInvulnerable(true);
+            setNoGravity(true);
         }
+        @Override public void tick() {
+            super.tick();
+            if (!GlowTracker.valid(FlightBlock.INSTANCE, world, this, displays)) {
+                displays.remove(anchorId, this);
+                GlowTracker.remove(world, this);
+            } else if (tickCount % 20 == 0) applyAppearance(world, visualData);
+        }
+        private void applyAppearance(ServerLevel level, CompoundTag data) {
+            readAdditionalSaveData(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), data));
+        }
+        @Override public boolean canUsePortal(boolean allowPassengers) { return false; }
+        @Override public boolean broadcastToPlayer(net.minecraft.server.level.ServerPlayer player) { return !isRemoved(); }
         @Override public boolean shouldBeSaved() { return false; }
     }
 }

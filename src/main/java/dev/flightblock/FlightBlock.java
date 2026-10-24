@@ -80,6 +80,7 @@ public final class FlightBlock {
                 for (ServerPlayer p : s.getPlayerList().getPlayers()) flight.check(p);
             }
             if (ticks % 20 == 0) previewParticles();
+            if (ticks % 100 == 0) glow.audit(this, true);
 
     }
     public void chunkLoaded(ServerLevel level, net.minecraft.world.level.chunk.ChunkAccess chunk) {
@@ -142,6 +143,9 @@ public final class FlightBlock {
                             .then(Commands.argument("count", IntegerArgumentType.integer(1, 64))
                                 .executes(c -> give(c.getSource(), EntityArgument.getPlayers(c, "players"), IntegerArgumentType.getInteger(c, "level"), IntegerArgumentType.getInteger(c, "count")))))))
                 .then(Commands.literal("status").executes(c -> status(c.getSource())))
+                .then(Commands.literal("glow").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                    .then(Commands.literal("check").executes(c -> glowAudit(c.getSource(), false)))
+                    .then(Commands.literal("repair").executes(c -> glowAudit(c.getSource(), true))))
                 .then(Commands.literal("off").executes(c -> {
                     ServerPlayer p = c.getSource().getPlayer();
                     if (p == null) { c.getSource().sendFailure(notice("请由玩家执行 /flightblock off", ChatFormatting.RED)); return 0; }
@@ -152,6 +156,12 @@ public final class FlightBlock {
     private static MutableComponent notice(String text, ChatFormatting color) {
         return Component.literal("[FlightBlock] ").withStyle(ChatFormatting.DARK_AQUA)
             .append(Component.literal(text).withStyle(color));
+    }
+    private int glowAudit(CommandSourceStack source, boolean repair) {
+        String report = glow.audit(this, repair);
+        source.sendSuccess(() -> notice(report, ChatFormatting.AQUA), false);
+        LOG.info("管理员 {} 执行发光{}：{}", source.getTextName(), repair ? "修复" : "检查", report);
+        return 1;
     }
     static void drainPending(Queue<Runnable> tasks) {
         // Work triggered by this batch waits for the next tick, too.

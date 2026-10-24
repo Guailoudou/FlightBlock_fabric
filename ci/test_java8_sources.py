@@ -9,6 +9,7 @@ class Java8SourcesCheck(unittest.TestCase):
             'net.minecraft.world.inventory.AbstractContainerMenu': 'net.minecraft.inventory.container.Container',
             'net.minecraft.world.Container': 'net.minecraft.inventory.IInventory',
             'net.minecraft.server.level.ServerPlayer': 'net.minecraft.entity.player.ServerPlayerEntity',
+            'net.minecraft.server.level.ChunkMap$TrackedEntity': 'net.minecraft.world.server.ChunkManager$EntityTracker',
         }
         source = 'import net.minecraftforge.fml.event.server.*;\nimport net.minecraft.world.inventory.*;\nimport net.minecraft.world.Container;\nimport net.minecraft.server.level.ServerPlayer;\nAbstractContainerMenu menu; Container input; ServerPlayer player; String descriptor = "Lnet/minecraft/server/level/ServerPlayer;";'
         result = convert(source, names)
@@ -16,6 +17,7 @@ class Java8SourcesCheck(unittest.TestCase):
         self.assertIn('Container menu; IInventory input; ServerPlayerEntity player;', result)
         self.assertIn('Lnet/minecraft/entity/player/ServerPlayerEntity;', result)
         self.assertIn('import net.minecraftforge.fml.event.server.*;', result)
+        self.assertIn('"net.minecraft.world.server.ChunkManager$EntityTracker"', convert('@Mixin(targets = "net.minecraft.server.level.ChunkMap$TrackedEntity")', names))
 
     def test_record_validation_and_value_semantics(self):
         result = backport('public record ItemState(int level, String id) { public ItemState { if (level < 1) throw new IllegalArgumentException(); } }')

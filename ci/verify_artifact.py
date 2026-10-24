@@ -41,6 +41,8 @@ def verify(path, minecraft, loader):
                     assert any(key.split("(")[0] == hook and value for key, value in entries.items()), f"Missing injected method mapping: {mixin}.{hook}"
         for mixin in config["mixins"]:
             assert f"{config['package'].replace('.', '/')}/{mixin}.class" in names, mixin
+        assert {'ChunkMapAccessor', 'TrackedEntityAccessor'} <= set(config['mixins'])
+        assert 'dev/flightblock/GlowTracker.class' in names
         if loader in ("fabric", "quilt"):
             metadata = json.loads(jar.read("fabric.mod.json"))
             assert metadata["depends"]["minecraft"] == minecraft

@@ -218,6 +218,19 @@ public final class RulesCheck {
         check(replaced.activatedAt() == idleActivated.activatedAt() && replaced.expiresAt() == idleActivated.expiresAt());
         check(!BlockGlow.shouldGlow(replaced, true, replaced.expiresAt()));
         check(!BlockGlow.shouldGlow(replaced.pending(), true, clock.millis()));
+        check(GlowTracker.shouldKeep(replaced, true, clock.millis(), replaced.dimension(), replaced.position()));
+        check(!GlowTracker.shouldKeep(replaced, true, clock.millis(), "minecraft:the_nether", replaced.position()));
+        check(!GlowTracker.shouldKeep(replaced, true, clock.millis(), replaced.dimension(), idleActivated.position()));
+        check(!GlowTracker.shouldKeep(replaced, false, clock.millis(), replaced.dimension(), replaced.position()));
+        check(!GlowTracker.shouldKeep(replaced, true, replaced.expiresAt(), replaced.dimension(), replaced.position()));
+        check(!GlowTracker.shouldKeep(null, true, clock.millis(), replaced.dimension(), replaced.position()));
+        Set<String> glowTags = new HashSet<>();
+        glowTags.add(GlowTracker.TAG);
+        glowTags.add("flightblock:anchor:" + replaced.id());
+        check(replaced.id().equals(GlowTracker.anchorId(glowTags)));
+        glowTags.add("flightblock:anchor:" + UUID.randomUUID());
+        check(GlowTracker.anchorId(glowTags) == null);
+        check(GlowTracker.anchorId(Set.of("unrelated")) == null);
         previews.put(idleActivated);
         var restoredActive = WorldState.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE,
             WorldState.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, previews).getOrThrow()).getOrThrow()

@@ -152,8 +152,12 @@ Fabric / Quilt 的飞行权限通过 [Player Ability Lib（PAL）](https://githu
 | `/flightblock reload` | 重载配置 | OP 等级 2 或控制台 |
 | `/flightblock status` | 查看自己的绑定、坐标、半径和剩余时间 | 所有玩家 |
 | `/flightblock off` | 解除自己的全部绑定并释放占用 | 所有玩家 |
+| `/flightblock glow check` | 只读检查发光记录、世界辅助实体与同步跟踪记录 | OP 等级 2 或控制台 |
+| `/flightblock glow repair` | 清理有 FlightBlock 归属标记的失效、重复或失联辅助实体 | OP 等级 2 或控制台 |
 
 例如 `/flightblock give @s 1` 可获得一个一级方块。单人世界中，管理员指令需要开启作弊。控制台使用指令时省略开头的 `/`。
+
+0.2.1 为发光辅助实体增加归属标记、位置和期限校验，并定期检查残留的同步记录。管理员可用 `glow check` 检查命令选择器之外的玩家同步记录；`glow repair` 只删除能确认归属的异常辅助实体，不修改世界方块，也不自动处理旧版未标记的展示实体。替换 JAR 后需要完整重启服务器；玩家退出重进不能代替服务器重启。此次异常的实际触发条件仍需在发生问题的服务器上验证。
 
 ## 从源码构建
 

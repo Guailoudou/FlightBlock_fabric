@@ -49,6 +49,7 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
         if (flightblockMinecraftVersion in ['1.21.8', '1.21.4', '1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) {
             adapted = adapted.replace('Identifier', 'ResourceLocation').replace('.identifier()', '.location()')
         }
+        if (flightblockMinecraftVersion in ['1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) adapted = adapted.replace('canUsePortal(boolean allowPassengers)', 'canChangeDimensions()')
         if (flightblockMinecraftVersion == '1.21.8') adapted = adapted.replace('mod.tick(event.server())', 'mod.tick(event.getServer())')
         if (flightblockMinecraftVersion in ['1.21.4', '1.21.1', '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5']) {
             adapted = adapted.replace('import net.minecraft.world.level.storage.TagValueInput;', '')
@@ -189,7 +190,8 @@ def prepareSources = tasks.register('prepareVersionSources', Sync) {
         // Fabric/Quilt still require named -> intermediary remapping.
         if (!legacyNbt) adapted = adapted.replace('CustomData data = result.get(DataComponents.CUSTOM_DATA);', 'java.util.Optional<? extends CustomData> stored = result.getComponentsPatch().get(DataComponents.CUSTOM_DATA);\n        CustomData data = stored == null ? null : stored.orElse(null);')
         if (project.hasProperty('flightblockOfficialRuntime') && flightblockOfficialRuntime) {
-            adapted = adapted.replaceAll('@Mixin\\(([^)]+)\\)', '@Mixin(value = $1, remap = false)')
+            adapted = adapted.replaceAll('@Mixin\\(targets\\s*=\\s*([^)]*)\\)', '@Mixin(targets = $1, remap = false)')
+                .replaceAll('@Mixin\\((?!targets\\s*=)([^)]+)\\)', '@Mixin(value = $1, remap = false)')
         }
         adapted
     }

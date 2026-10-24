@@ -29,6 +29,8 @@
   "net.minecraft.resources.ResourceLocation": "net.minecraft.util.ResourceLocation",
   "net.minecraft.resources.ResourceLocation$Serializer": "net.minecraft.util.ResourceLocation$Serializer",
   "net.minecraft.server.Bootstrap": "net.minecraft.util.registry.Bootstrap",
+  "net.minecraft.server.level.ChunkMap": "net.minecraft.world.server.ChunkManager",
+  "net.minecraft.server.level.ChunkMap$TrackedEntity": "net.minecraft.world.server.ChunkManager$EntityTracker",
   "net.minecraft.server.level.ServerLevel": "net.minecraft.world.server.ServerWorld",
   "net.minecraft.server.level.ServerPlayer": "net.minecraft.entity.player.ServerPlayerEntity",
   "net.minecraft.server.level.ServerPlayerGameMode": "net.minecraft.server.management.PlayerInteractionManager",
