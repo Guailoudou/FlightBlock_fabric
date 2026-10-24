@@ -4,6 +4,11 @@ from forge16_sources import convert
 
 
 class Java8SourcesCheck(unittest.TestCase):
+    def test_legacy_entity_removal_state(self):
+        result = backport('if (entity.isRemoved()) return false; return !isRemoved();')
+        self.assertIn('if (entity.removed)', result)
+        self.assertIn('return !removed;', result)
+
     def test_forge_class_names_and_injection_descriptor(self):
         names = {
             'net.minecraft.world.inventory.AbstractContainerMenu': 'net.minecraft.inventory.container.Container',

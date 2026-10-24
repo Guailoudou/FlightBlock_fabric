@@ -93,7 +93,7 @@ def backport(source):
     source = source.replace("stack.is(Items.TARGET)", "(stack.getItem() == Items.TARGET)")
     source = source.replace("input.getItem(i).is(pattern[i])", "(input.getItem(i).getItem() == pattern[i])")
     source = source.replace(".setTarget(p.getUUID())", ".setOwner(p.getUUID())")
-    source = source.replace(".discard()", ".remove()").replace("glow.isRemoved()", "glow.removed").replace("old.isRemoved()", "old.removed")
+    source = source.replace(".discard()", ".remove()").replace(".isRemoved()", ".removed").replace("!isRemoved()", "!removed")
     source = source.replace(".isCurrentlyGlowing()", ".isGlowing()").replace("setGlowingTag(", "setGlowing(")
     source = source.replace("boolean shouldBeSaved()", "boolean save(net.minecraft.nbt.CompoundTag tag)")
     source = source.replace("JsonParser.parseString(", "new JsonParser().parse(")
