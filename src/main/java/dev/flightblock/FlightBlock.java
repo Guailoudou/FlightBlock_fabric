@@ -159,7 +159,9 @@ public final class FlightBlock {
     }
     private int glowAudit(CommandSourceStack source, boolean repair) {
         String report = glow.audit(this, repair);
-        source.sendSuccess(() -> notice(report, ChatFormatting.AQUA), false);
+        ServerPlayer p = source.getPlayer();
+        if (p != null) p.sendSystemMessage(notice(report, ChatFormatting.AQUA));
+        else source.sendSuccess(() -> notice(report, ChatFormatting.AQUA), false);
         LOG.info("管理员 {} 执行发光{}：{}", source.getTextName(), repair ? "修复" : "检查", report);
         return 1;
     }
